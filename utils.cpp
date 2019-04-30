@@ -1,6 +1,6 @@
-#include "Block.h"
-#include "Block.cpp"
 #include <cmath>
+#include "Block/Block.h"
+#include "Block/Block.cpp"
 #pragma once
 
 const int     R_start = 1;			// 磁盘中R地址从1开始
