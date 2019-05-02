@@ -26,12 +26,7 @@ const int numOfRowInBlk = 7;    // 一个block中可容纳的记录数量
 
 const int addrOfLastRow = numOfRowInBlk * sizeOfRow;    // 块中最后一条记录的地址
 const int endOfBlock = numOfRowInBlk * sizeOfRow + 8;   // 块的末尾地址
-
-// const int R_start = 1;			// 磁盘中R地址从1开始
-// const int S_start = 20;		    // 磁盘中S地址从20开始
-// const int R_size = 112;         // R关系的记录总数
-// const int S_size = 224;         // S关系的记录总数
-const int MAX_ATTR_VAL = 10000; // 属性的最大值 + 1
+const int MAX_ATTR_VAL = 10000; // 属性的最大值 + 1，可用于设置空记录
 
 // 磁盘和内存的一些参数
 const int ADDR_NOT_EXISTS = -1;
@@ -39,8 +34,13 @@ const int DEFAULT_ADDR = 0;
 const int addrOfScan_1 = 100;   // 第一遍排序结果的起始地址
 const int addrOfScan_2 = 200;   // 第二遍排序结果的起始地址
 
-Buffer buff;   // 定义缓冲区
+Buffer buff;   // 全局只定义一个缓冲区
 
+/**
+ * @brief 二元元组
+ * 有两个属性A和B，并且根据要求定义了一些比较运算符
+ * 由于二元组可以对应键值对，因此也可用作索引
+ */
 typedef struct Row {
     bool isFilled = false;
     int A, B;
@@ -55,8 +55,9 @@ typedef struct Row {
 } row_t, index_t;
 
 /**
- * @brief 
- * 
+ * @brief 缓冲区（映射层）
+ * 在extmem的基础上再抽象一层，将读写、申请释放等操作封装了进去
+ * 同时还在一定程度上增加了缓冲区管理功能
  */
 class Block {
 public:
@@ -72,8 +73,8 @@ public:
 private:
     blkData_t *blkData;
     addr_t readBlkAddr, writeBlkAddr;
-    cursor_t cursor;
-    cursor_t endAddrOfData;
+    cursor_t cursor;        // 缓冲区当前的读写位置
+    cursor_t endAddrOfData; // 缓冲区中的最后一条记录的位置
     void _writeAddr(unsigned int nextAddr);
     void _writeToDisk(addr_t addr);
 };

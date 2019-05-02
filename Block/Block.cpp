@@ -281,7 +281,7 @@ int read_N_Rows_From_1_Block(block_t &readBlk, row_t *R, int N) {
  * 前提：所有M个blk都必须已被初始化(通过loadFromDisk等方法)
  * 
  * @param readBlk 用于读取记录的连续缓冲区块
- * @param R 记录数组
+ * @param R 用于读取记录数组
  * @param N 记录数组的最大长度
  * @param M block的最大数量
  * @return int 实际读取的记录数量
