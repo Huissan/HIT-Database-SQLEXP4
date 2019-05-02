@@ -54,24 +54,20 @@ typedef struct Row {
     bool operator==(const Row &R) { return ((A == R.A) && (B == R.B)); }
 } row_t, index_t;
 
-typedef struct Table {
-    addr_t start;
-    int size;
-} table_t;
-
+/**
+ * @brief 
+ * 
+ */
 class Block {
 public:
-    // Block(unsigned int total);
     Block();
-    void writeInit(const file_t filename, int numOfRows = numOfRowInBlk);
     void freeBlock();
+    void loadFromDisk(addr_t addr, cursor_t endPos = addrOfLastRow);
+    void writeInit(const file_t filename, int numOfRows = numOfRowInBlk);
     addr_t writeLastBlock();
     row_t getNewRow();
     addr_t writeRow(const row_t R);
     addr_t readNextAddr();
-    void loadFromDisk(addr_t addr, cursor_t endPos = addrOfLastRow);
-    void writeToDisk(addr_t nextAddr = DEFAULT_ADDR);
-    inline addr_t getCurrentReadAddr() { return readBlkAddr; }
 
 private:
     blkData_t *blkData;
@@ -83,5 +79,18 @@ private:
 };
 
 typedef Block block_t;
+
+/**
+ * @brief 记录表的一些基本信息
+ */
+typedef struct Table {
+    addr_t start;   // 表的开始磁盘地址
+    addr_t end;     // 表的结束磁盘地址
+    int size;       // 表的记录总数量
+    int rowSize;    // 表的记录长度
+    Table(addr_t newStart = 0, int newSize = 0, addr_t newEnd = 0, int newRowSize = sizeOfRow): 
+        start(newStart), end(newEnd), size(newSize), rowSize(newRowSize)
+    {}
+} table_t;
 
 #endif // !ADAPTER_H
