@@ -16,11 +16,11 @@
 typedef std::map<addr_t, index_t> table_map_t;
 typedef std::pair<addr_t, index_t> pair_t;
 
-const addr_t index_start = 10000;
+const addr_t index_start = 10000;   // index的起始存储位置
 const index_t invalid_index;
 
 table_map_t clusterTableMap, indexTableMap; // 两张全局地址映射表
-BPlusTree BPTR; // 在全局设置1棵B+树
+BPlusTree BPTR;
 
 
 /**
@@ -33,23 +33,20 @@ BPlusTree BPTR; // 在全局设置1棵B+树
  * @param clusterAddr 聚簇结果的起始存储位置
  */
 void tableClustering(table_t table, addr_t clusterAddr) {
-    addr_t scan_1_Index = addrOfScan_1;
+    addr_t scan_1_Index = addrOfScan_1; // 一趟扫描的起始地址
     int rowTimes2Standard = table.rowSize / sizeOfRow;
-    int numOfRows = rowTimes2Standard * (numOfRowInBlk / rowTimes2Standard);
-    int sizeOfSubTable = numOfRows * numOfBufBlock;      // 由缓冲区划分出的子表大小
+    int numOfRows = rowTimes2Standard * (numOfRowInBlk / rowTimes2Standard);    // 一块中有多少条标准大小的记录
+    int sizeOfSubTable = numOfRows * numOfBufBlock;      // 由缓冲区划分出的子表大小（单位：行）
     if (sizeOfSubTable == 0)
         error("table信息不全：请检查table的参数！");
-    // 划分出的子表数量
-    int numOfSubTables = ceil(1.0 * rowTimes2Standard * table.size / sizeOfSubTable);
+    int numOfSubTables = ceil(1.0 * rowTimes2Standard * table.size / sizeOfSubTable);   // 划分出的子表数量
 
     // 聚簇操作：两趟归并排序
     scan_1_PartialSort(numOfSubTables, scan_1_Index, table.start, sizeOfSubTable);
     addr_t endAddr = scan_2_SortMerge(numOfSubTables, scan_1_Index, clusterAddr);
-    if (endAddr == ADDR_NOT_EXISTS) {
-        printf("二趟扫描出现错误！\n");
-        system("pause");
-        exit(0);
-    }
+    if (endAddr == ADDR_NOT_EXISTS)
+        error("二趟扫描出现错误！");
+
     // 创建新的聚簇条目
     index_t clusterIndex;
     clusterIndex.A = clusterAddr, clusterIndex.B = endAddr;
@@ -117,7 +114,6 @@ addr_t buildIndex(addr_t clusteredTableStart, addr_t indexStart) {
             break;
         }
     }
-
     // 写索引地址映射表
     table_map_t::iterator findIndex;
     findIndex = indexTableMap.find(tableAddr);
@@ -143,8 +139,9 @@ void loadIndex(addr_t indexStart) {
     int numOfReadBlocks = numOfBufBlock;
     block_t blk[numOfReadBlocks];
     for (int i = 0; i < numOfReadBlocks; ++i) {
-        blk[i].loadFromDisk(next++);
-        if (blk[i].readNextAddr() == END_OF_FILE) {
+        blk[i].loadFromDisk(next);
+        next = blk[i].readNextAddr();
+        if (next == END_OF_FILE) {
             numOfReadBlocks = i + 1;
             break;
         }
@@ -175,6 +172,7 @@ void loadIndex(addr_t indexStart) {
 /**
  * @brief 聚簇管理——使用聚簇文件前的准备工作
  * 对table进行聚簇文件、聚簇条目等结构的生成和管理
+ * 用作对外提供聚簇的接口
  * 
  * @param table 待做聚簇管理的表
  * @param clusterAddr 聚簇文件的起始地址，若为默认值DEFAULT_ADDR则使用现有的聚簇文件
@@ -198,7 +196,6 @@ void useCluster(table_t table, addr_t clusterAddr = DEFAULT_ADDR) {
                 clusterAddr = (iter->second).B + 1;
             }
         } else {
-            // 若有对应的聚簇条目，则返回
             return;
         }
     } else {
@@ -221,6 +218,7 @@ void useCluster(table_t table, addr_t clusterAddr = DEFAULT_ADDR) {
 /**
  * @brief 索引管理——使用索引文件前的准备工作
  * 对table进行索引文件、索引条目等结构的生成和管理
+ * 用作对外提供索引的接口
  * 
  * @param table 待做聚簇管理的表
  * @return addr_t table对应索引文件的起始地址
