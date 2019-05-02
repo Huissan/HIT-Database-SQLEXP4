@@ -35,6 +35,12 @@ private:
 
 #endif // !LEAF_NODE
 
+/**
+ * @brief 插入一个叶节点
+ * 
+ * @param key 待插入叶结点的键值
+ * @param data 待插入叶节点的数值
+ */
 void LeafNode::insert(key_t key, const tree_data_t &data) {
 	int i;
 	for (i = m_KeyNum; i >= 1 && m_KeyValues[i - 1] > key; --i) {
@@ -46,6 +52,9 @@ void LeafNode::insert(key_t key, const tree_data_t &data) {
 	setKeyNum(m_KeyNum + 1);
 }
 
+/**
+ * @brief 清空所有叶节点
+ */
 void LeafNode::clear() {
 	for (int i = 0; i < m_KeyNum; ++i) {
 		// if type of m_Datas is pointer
@@ -54,7 +63,12 @@ void LeafNode::clear() {
 	}
 }
 
-// 分裂节点
+/**
+ * @brief 分裂叶节点
+ * 
+ * @param parentNode 当前叶节点的父节点指针
+ * @param childIndex 当前叶节点在父节点中对应键值的下标
+ */
 void LeafNode::split(BplusNode *parentNode, int childIndex) {
 	LeafNode *newNode = new LeafNode();//分裂后的右节点
 	setKeyNum(MINNUM_LEAF);
@@ -74,7 +88,13 @@ void LeafNode::split(BplusNode *parentNode, int childIndex) {
 	((InternalNode *)parentNode)->insert(childIndex, childIndex + 1, m_KeyValues[MINNUM_LEAF], newNode);
 }
 
-// 合并节点
+/**
+ * @brief 合并叶节点
+ * 
+ * @param parentNode 叶节点的父节点指针
+ * @param childNode 待合并的叶结点指针
+ * @param keyIndex 该键值在父结点中对应的下标
+ */
 void LeafNode::mergeChild(BplusNode *parentNode, BplusNode *childNode, int keyIndex) {
 	// 合并数据
 	for (int i = 0; i < childNode->getKeyNum(); ++i)
@@ -84,7 +104,9 @@ void LeafNode::mergeChild(BplusNode *parentNode, BplusNode *childNode, int keyIn
 	parentNode->removeKey(keyIndex, keyIndex + 1);
 }
  
-// 从结点中移除键值
+/**
+ * @brief 根据叶结点的下标，从节点中移除键值
+ */
 void LeafNode::removeKey(int keyIndex, int childIndex) {
 	for (int i = keyIndex; i < getKeyNum() - 1; ++i) {
 		setKeyValue(i, getKeyValue(i + 1));
@@ -93,7 +115,14 @@ void LeafNode::removeKey(int keyIndex, int childIndex) {
 	setKeyNum(getKeyNum() - 1);
 }
 
-// 从兄弟结点中借一个键值
+/**
+ * @brief 从兄弟节点中借一个键值
+ * 
+ * @param siblingNode 被借的兄弟节点指针
+ * @param parentNode 当前节点的父结点指针
+ * @param keyIndex 需要填充的键值在该节点中的下标
+ * @param d 被借的兄弟节点的相对位置
+ */
 void LeafNode::borrowFrom(BplusNode *siblingNode, BplusNode *parentNode, int keyIndex, SIBLING_DIRECTION d) {
 	switch(d) {
 		case LEFT: {

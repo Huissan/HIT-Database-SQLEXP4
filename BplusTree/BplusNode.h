@@ -52,7 +52,12 @@ protected:
 	key_t m_KeyValues[MAXNUM_KEY];	// 节点值
 };
 
-// 折半查找查询键值key在结点中存储的下标
+/**
+ * @brief 折半查找查询键值key在结点中存储的下标
+ * 
+ * @param key 查询键值
+ * @return int 键值对应的下标
+ */
 int BplusNode::getKeyIndex(key_t key) const {
 	int left = 0;
     int right = getKeyNum() - 1;

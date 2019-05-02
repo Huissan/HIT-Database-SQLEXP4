@@ -54,9 +54,12 @@ private:
 // -----------------------------------------------------------------------
 //                            Public Interfaces                           
 // -----------------------------------------------------------------------
- 
+
+/**
+ * @brief 对外提供的B+树的清空操作接口
+ */
 void BPlusTree::clear() {
-	if (m_Root!=NULL) {
+	if (m_Root != NULL) {
 		m_Root->clear();
 		delete m_Root;
 		m_Root = NULL;
@@ -64,6 +67,9 @@ void BPlusTree::clear() {
 	}
 }
 
+/**
+ * @brief 对外提供的B+树的插入操作接口
+ */
 bool BPlusTree::insert(key_t key, const tree_data_t &data){
 	// 是否已经存在
 	if (search(key))
@@ -89,7 +95,10 @@ bool BPlusTree::insert(key_t key, const tree_data_t &data){
 	recursive_insert(m_Root, key, data);
 	return true;
 }
- 
+
+/**
+ * @brief 对外提供的B+树的删除操作接口
+ */
 bool BPlusTree::remove(key_t key, tree_data_t &dataValue) {
 	if (!search(key))
 		return false;
@@ -111,7 +120,10 @@ bool BPlusTree::remove(key_t key, tree_data_t &dataValue) {
 	recursive_remove(m_Root, key, dataValue);
 	return true;
 }
- 
+
+/**
+ * @brief 对外提供的B+树的更新操作接口
+ */
 bool BPlusTree::update(key_t oldKey, key_t newKey) {
 	if (search(newKey)) 
 		// 检查更新后的键是否已经存在
@@ -126,10 +138,16 @@ bool BPlusTree::update(key_t oldKey, key_t newKey) {
 	}
 }
  
+/**
+ * @brief 对外提供的B+树搜索接口
+ */
 bool BPlusTree::search(key_t key) {
 	return recursive_search(m_Root, key);
 }
  
+/**
+ * @brief 对外提供的B+树结构输出接口
+ */
 void BPlusTree::printData() const {
 	LeafNode *itr = m_DataHead;
 	while(itr) {
@@ -140,6 +158,9 @@ void BPlusTree::printData() const {
 	}
 }
  
+/**
+ * @brief 选择比较条件为compareOpeartor，比较值为compareKey的所有叶结点的值
+ */
 vector<tree_data_t> BPlusTree::select(key_t compareKey, int compareOpeartor) {
 	vector<tree_data_t> results;
 	if (m_Root) {
@@ -209,6 +230,9 @@ vector<tree_data_t> BPlusTree::select(key_t compareKey, int compareOpeartor) {
 	return results;
 }
  
+/**
+ * @brief 选择介于smallKey和largeKey之间的所有叶节点的值
+ */
 vector<tree_data_t> BPlusTree::select(key_t smallKey, key_t largeKey) {
 	vector<tree_data_t> results;
 	if (smallKey <= largeKey) {
@@ -234,11 +258,18 @@ vector<tree_data_t> BPlusTree::select(key_t smallKey, key_t largeKey) {
 	return results;
 }
 
+
 // -----------------------------------------------------------------------
 //                                 Private                                
 // -----------------------------------------------------------------------
 
-// 从上往下递归插入
+/**
+ * @brief 从上往下递归插入值为data的新节点
+ * 
+ * @param parentNode 当前所在的节点
+ * @param key 待插入的键值
+ * @param data 需要插入的新节点的值
+ */
 void BPlusTree::recursive_insert(BplusNode *parentNode, key_t key, const tree_data_t &data) {
 	if (parentNode->getType() == LEAF)  // 叶子结点
 		((LeafNode*)parentNode)->insert(key, data);
@@ -257,7 +288,14 @@ void BPlusTree::recursive_insert(BplusNode *parentNode, key_t key, const tree_da
 	}
 }
 
-// 从下往上递归删除
+
+/**
+ * @brief 从下往上递归删除值为dataValue的节点
+ * 
+ * @param parentNode 当前所在的节点
+ * @param key 待删除的键值
+ * @param dataValue 需要删除的节点的值
+ */
 void BPlusTree::recursive_remove(BplusNode *parentNode, key_t key, tree_data_t &dataValue) {
 	int keyIndex = parentNode->getKeyIndex(key);
 	int childIndex= parentNode->getChildIndex(key, keyIndex);
@@ -281,24 +319,33 @@ void BPlusTree::recursive_remove(BplusNode *parentNode, key_t key, tree_data_t &
 				// 左兄弟结点可借
 				pChildNode->borrowFrom(pLeft, parentNode, childIndex-1, LEFT);
 			else if (pRight && pRight->getKeyNum()>MINNUM_KEY)
-				//右兄弟结点可借
+				// 右兄弟结点可借
 				pChildNode->borrowFrom(pRight, parentNode, childIndex, RIGHT);
 			else if (pLeft) {
-				//与左兄弟合并
+				// 与左兄弟合并
 				pLeft->mergeChild(parentNode, pChildNode, childIndex-1);
 				pChildNode = pLeft;
 			} else if (pRight)
-				//与右兄弟合并
+				// 与右兄弟合并
 				pChildNode->mergeChild(parentNode, pRight, childIndex);
 		}
 		recursive_remove(pChildNode, key, dataValue);
 	}
 }
  
+
 void BPlusTree::search(key_t key, SelectResult &result) {
 	recursive_search(m_Root, key, result);
 }
  
+/**
+ * @brief 根据键的内容，递归搜索B+树
+ * 
+ * @param pNode 当前的搜索节点
+ * @param key 搜索的键
+ * @return true 搜索成功：搜索到了对应的节点
+ * @return false 搜索失败
+ */
 bool BPlusTree::recursive_search(BplusNode *pNode, key_t key) const {
 	if (pNode == NULL)  //检测节点指针是否为空，或该节点是否为叶子节点
 		return false;
@@ -317,6 +364,13 @@ bool BPlusTree::recursive_search(BplusNode *pNode, key_t key) const {
 	}
 }
  
+/**
+ * @brief 递归搜索B+树，并将搜索到的结果送给result
+ * 
+ * @param pNode 当前的搜索节点
+ * @param key 搜索的键
+ * @param result 搜索结果
+ */
 void BPlusTree::recursive_search(BplusNode *pNode, key_t key, SelectResult &result) {
 	int keyIndex = pNode->getKeyIndex(key);
 	int childIndex = pNode->getChildIndex(key, keyIndex); // 孩子结点指针索引
@@ -329,6 +383,13 @@ void BPlusTree::recursive_search(BplusNode *pNode, key_t key, SelectResult &resu
 		return recursive_search(((InternalNode*)pNode)->getChild(childIndex), key, result);
 }
 
+/**
+ * @brief 更改键的内容
+ * 
+ * @param pNode 待更改的节点
+ * @param oldKey 旧键内容
+ * @param newKey 新键内容
+ */
 void BPlusTree::changeKey(BplusNode *pNode, key_t oldKey, key_t newKey) {
 	if (pNode!=NULL && pNode->getType() != LEAF) {
 		int keyIndex = pNode->getKeyIndex(oldKey);
@@ -339,17 +400,23 @@ void BPlusTree::changeKey(BplusNode *pNode, key_t oldKey, key_t newKey) {
 	}
 }
  
+/**
+ * @brief 递归输出B+树的键值
+ * 
+ * @param pNode 当前搜索到的节点
+ * @param count 当前节点键的数量
+ */
 void BPlusTree::printInConcavo(BplusNode *pNode, int count) const {
 	if (pNode != NULL) {
 		int i, j;
 		for (i = 0; i < pNode->getKeyNum(); ++i) {
 			if (pNode->getType() != LEAF)
 				printInConcavo(((InternalNode *)pNode)->getChild(i), count - 2);
-			for (j=count; j>=0; --j)
+			for (j = count; j >= 0; --j)
 				cout << "-";
 			cout << pNode->getKeyValue(i) << endl;
 		}
-		if (pNode->getType()!=LEAF)
+		if (pNode->getType() != LEAF)
 			printInConcavo(((InternalNode *)pNode)->getChild(i), count - 2);
 	}
 }

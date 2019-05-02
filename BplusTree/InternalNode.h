@@ -9,11 +9,9 @@ class InternalNode : public BplusNode{
 public:
 	InternalNode():BplusNode() { setType(INTERNAL); }
 	virtual ~InternalNode() {}
- 
-	BplusNode *getChild(int i) const { return m_Childs[i]; }
-	// 修改指向孩子节点的指针
-	void setChild(int i, BplusNode *child){ m_Childs[i] = child; }
-	// 插入一个内节点
+
+	BplusNode *getChild(int i) const { return m_Childs[i]; }		// 获取子节点
+	void setChild(int i, BplusNode *child) { m_Childs[i] = child; }	// 修改指向孩子节点的指针
 	void insert(int keyIndex, int childIndex, key_t key, BplusNode *childNode);
     
 	virtual void clear();
@@ -28,7 +26,14 @@ private:
 
 #endif // !INTERNAL_NODE
 
-// 向节点中插入值
+/**
+ * @brief 向节点中插入值
+ * 
+ * @param keyIndex 待插入键值在当前节点的下标
+ * @param childIndex 待插入键值的在子节点指针中的下标
+ * @param key 待插入键值
+ * @param childNode 指向子节点的指针
+ */
 void InternalNode::insert(int keyIndex, int childIndex, key_t key, BplusNode *childNode) {
 	int i;
 	for (i = getKeyNum(); i > keyIndex; --i) {
@@ -43,6 +48,9 @@ void InternalNode::insert(int keyIndex, int childIndex, key_t key, BplusNode *ch
     setKeyNum(m_KeyNum + 1);
 }
 
+/**
+ * @brief 清空所有的内节点
+ */
 void InternalNode::clear() {
 	for (int i = 0; i <= m_KeyNum; ++i) {
 		m_Childs[i]->clear();
@@ -51,7 +59,12 @@ void InternalNode::clear() {
 	}
 }
 
-// 分裂节点
+/**
+ * @brief 分裂内节点
+ * 
+ * @param parentNode 当前内节点的父节点
+ * @param childIndex 当前内节点在父节点中对应键值的下标
+ */
 void InternalNode::split(BplusNode *parentNode, int childIndex) {
 	InternalNode *newNode = new InternalNode(); //分裂后的右节点
 	newNode->setKeyNum(MINNUM_KEY);
@@ -67,7 +80,13 @@ void InternalNode::split(BplusNode *parentNode, int childIndex) {
 	((InternalNode*)parentNode)->insert(childIndex, childIndex + 1, m_KeyValues[MINNUM_KEY], newNode);
 }
  
-// 合并节点
+/**
+ * @brief 合并内节点
+ * 
+ * @param parentNode 当前节点的父节点
+ * @param childNode 待合并的父节点的子节点
+ * @param keyIndex 该键值在父结点中对应的下标
+ */
 void InternalNode::mergeChild(BplusNode *parentNode, BplusNode *childNode, int keyIndex) {
 	// 合并数据
 	insert(MINNUM_KEY, MINNUM_KEY+1, parentNode->getKeyValue(keyIndex), ((InternalNode*)childNode)->getChild(0));
@@ -79,7 +98,12 @@ void InternalNode::mergeChild(BplusNode *parentNode, BplusNode *childNode, int k
 	delete ((InternalNode *)parentNode)->getChild(keyIndex + 1);
 }
 
-// 从结点中移除键值
+/**
+ * @brief 从结点中移除键值
+ * 
+ * @param keyIndex 待移除键值的下标
+ * @param childIndex 待移除的键值对应的子节点指针的下标
+ */
 void InternalNode::removeKey(int keyIndex, int childIndex) {
 	for (int i = 0; i < (getKeyNum() - keyIndex - 1); ++i) {
 		setKeyValue(keyIndex + i, getKeyValue(keyIndex + i + 1));
@@ -88,7 +112,14 @@ void InternalNode::removeKey(int keyIndex, int childIndex) {
 	setKeyNum(getKeyNum() - 1);
 }
 
-// 从兄弟结点中借一个键值
+/**
+ * @brief 从兄弟结点中借一个键值
+ * 
+ * @param siblingNode 当前节点的兄弟节点指针
+ * @param parentNode 当前节点的父节点指针
+ * @param keyIndex 需要填充的键值在该节点中的下标
+ * @param d 被借的兄弟节点相对该节点的位置
+ */
 void InternalNode::borrowFrom(BplusNode *siblingNode, BplusNode *parentNode, int keyIndex, SIBLING_DIRECTION d) {
 	switch(d) {
 		case LEFT: {
@@ -110,7 +141,13 @@ void InternalNode::borrowFrom(BplusNode *siblingNode, BplusNode *parentNode, int
 	}
 }
 
-// 
+/**
+ * @brief 根据条件获取子节点的下标
+ * 
+ * @param key 子节点的键值
+ * @param keyIndex 子节点的
+ * @return int 
+ */
 int InternalNode::getChildIndex(key_t key, int keyIndex) const {
 	if (key == getKeyValue(keyIndex))
         return keyIndex + 1;
