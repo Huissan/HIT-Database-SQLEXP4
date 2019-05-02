@@ -101,7 +101,7 @@ row_t Block::getNewRow() {
         }
     }
     // 读取Row中的属性值A, B
-    char str1[4] = "\0", str2[4] = "\0";
+    char str1[5] = "\0", str2[5] = "\0";
     for (int i = 0; i < 4; ++i) {
         str1[i] = *(blkData + cursor + i);
         if (str1[i] == '\0')
@@ -303,12 +303,16 @@ int read_N_Rows_From_M_Block(block_t *readBlk, row_t *R, int N, int M) {
     if (next == END_OF_FILE) {
         // 最后一块若没被使用，只可能是处于已经被归还的状态
         // 这时读出来的地址一定是END_OF_FILE，以此判断是否读到表尾
-        next = readBlk[count].readNextAddr();
-        while(next != END_OF_FILE) {
-            // 归还剩余的缓冲区
-            next = readBlk[count].readNextAddr();
-            readBlk[count].freeBlock();
-            count += 1;
+        if (totalRead > 0) {
+            do {    // 归还剩余的缓冲区
+                next = readBlk[count].readNextAddr();
+                readBlk[count].freeBlock();
+                count += 1;
+            } while(next != END_OF_FILE);
+        } else {
+            // 上一轮刚好读完整张表，这一轮不需要归还缓冲区
+            // 因为在上一轮所有缓冲区都已被释放
+            ;
         }
     } else {
         while(count < M && next != END_OF_FILE) {

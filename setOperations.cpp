@@ -149,7 +149,8 @@ int main() {
     clear_Buff_IO_Count();
     // table_t res = tablesUnion(table_R, table_S);
     // table_t res = tablesIntersect(table_R, table_S);
-    table_t res = tablesDiff(table_R, table_S);
+    // table_t res = tablesDiff(table_R, table_S);
+    table_t res = tablesDiff(table_S, table_R);
     // useCluster(res, 4000);
     // tableDistinct(res, res.start);
     showResult(res.start);

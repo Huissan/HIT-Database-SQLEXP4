@@ -155,23 +155,36 @@ void showResult(addr_t resStartAddr, int newSizeOfRow = sizeOfRow) {
  * @brief 一趟扫描的中间步骤——块内散列
  * 从磁盘中读取数据到缓冲区上，散列成若干组并将每组散列结果存储回磁盘上
  * 
- * @param numOfBuckets 待排序关系表的子表数量
- * @param startIndex 该表一趟扫描结果存储的起始地址
- * @param scan_1_index 该表一趟扫描所读入磁盘块的起始地址
+ * @param numOfBuckets 桶的数量，在不大于缓冲区数量的情况下要求尽可能地多
+ * @param startIndex 该表一趟扫描所读入磁盘块的起始地址
+ * @param scan_1_index 该表一趟扫描结果存储的起始地址
  */
 void scan_1_HashToBucket(int numOfBuckets, addr_t startIndex, addr_t scan_1_index[]) {
-    int numOfRows = sizeOfRow;
+    int numOfReadBlk = numOfBufBlock - numOfBuckets;
+    if (numOfReadBlk < 0)
+        error("错误：桶的数量大于缓冲区数量！");
+    int numOfRows = numOfRowInBlk * numOfReadBlk;
     row_t R_data[numOfRows], R_Empty;
-    R_Empty.A = MAX_ATTR_VAL, R_Empty.B = MAX_ATTR_VAL;
-    block_t readBlk, bucketBlk[numOfBuckets];
-    readBlk.loadFromDisk(startIndex);
-    for (int i = 0; i < numOfBuckets; ++i)
+    block_t *readBlk = new block_t[numOfReadBlk];
+    block_t *bucketBlk = new block_t[numOfBuckets];
+    addr_t next = startIndex;
+    for (int i = 0; i < numOfBuckets; ++i) {
         bucketBlk[i].writeInit(scan_1_index[i]);
+    }
+    for (int i = 0; i < numOfReadBlk; ++i) {
+        readBlk[i].loadFromDisk(next);
+        next = readBlk[i].readNextAddr();
+        if (next == END_OF_FILE) {
+            numOfReadBlk = i + 1;
+            numOfRows = sizeOfRow * numOfReadBlk;
+            break;
+        }
+    }
 
     int readRows;
     while(1) {
-        readRows = read_N_Rows_From_1_Block(readBlk, R_data, numOfRows);
-        for (int k = 0; k < numOfRows; ++k) {
+        readRows = read_N_Rows_From_M_Block(readBlk, R_data, numOfRows, numOfReadBlk);
+        for (int k = 0; k < readRows; ++k) {
             int hashVal = hashRowsByA(R_data[k], numOfBuckets);
             bucketBlk[hashVal].writeRow(R_data[k]);
         }

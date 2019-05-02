@@ -99,31 +99,41 @@ table_t NEST_LOOP_JOIN(table_t table1, table_t table2) {
  * @param S_addr 有序S表的存储起始地址
  * @param resTable 连接结果的存储信息表
  */
-void scan_3_SortedJoin(addr_t R_addr, addr_t S_addr, table_t &resTable) {
-    int maxNumOfRows_S = 2 * numOfRowInBlk; // 采用一次从磁盘上读取2块S表的策略
-    block_t Rblk, Sblk, resBlk;
-    Row t_R, t_S[maxNumOfRows_S];
+void scan_3_SortedJoin(table_t table1, table_t table2, table_t &resTable) {
+    table_t bigTable, smallTable;
+    // 决定大小表
+    if (table1.size > table2.size) {
+        bigTable = table1;
+        smallTable = table2;
+    } else {
+        bigTable = table2;
+        smallTable = table1;
+    }
+    int maxNumOfRows_1 = numOfRowInBlk;     // 一次从磁盘上读取1块小表
+    int maxNumOfRows_2 = 2 * numOfRowInBlk; // 一次从磁盘上读取2块大表
+    block_t blkSmall, blkBig, preLoadBlk, resBlk;
+    Row t_R, t_S[maxNumOfRows_2];
     resBlk.writeInit(resTable.start, numOfRowInBlk - 1);
-    Rblk.loadFromDisk(R_addr);
-    Sblk.loadFromDisk(S_addr);
+    blkSmall.loadFromDisk(smallTable.start);
+    blkBig.loadFromDisk(bigTable.start);
 
-    int numOfRows_S = maxNumOfRows_S;
-    int pt_S = numOfRows_S;     // 记录S表的最后一个可连接记录的检索位置
+    int readRows_2 = maxNumOfRows_2;
+    int pt_S = readRows_2;     // 记录S表的最后一个可连接记录的检索位置
     int matchMark = 0;          // 记录上一批连接操作的第一次匹配位置，以便剪枝
     addr_t curAddr = resTable.start;
     bool prior_match = false;
     bool R_over = false, S_over = false;
     while(1) {
         // 循环检索连接条件
-        t_R = Rblk.getNewRow();
+        t_R = blkSmall.getNewRow();
         R_over = (t_R.isFilled == false);
         if (R_over || S_over) {
             // 结束连接循环检索的条件：
             // 1. R表读完了  或  2. S表读完了
             if (!R_over)
-                Rblk.freeBlock();
+                blkSmall.freeBlock();
             else if (!S_over)
-                Sblk.freeBlock();
+                blkBig.freeBlock();
             else
                 ;
             addr_t endAddr = resBlk.writeLastBlock();
@@ -132,20 +142,20 @@ void scan_3_SortedJoin(addr_t R_addr, addr_t S_addr, table_t &resTable) {
             resTable.end = curAddr;
             break;
         }
-        if (pt_S == numOfRows_S) {
+        if (pt_S == readRows_2) {
             // 检索完所有加载到缓冲区的的S表数据，需要加载下一批数据
             pt_S = 0;       // 两个标记的复位
             matchMark = 0;
-            numOfRows_S = read_N_Rows_From_1_Block(Sblk, t_S, maxNumOfRows_S);
-            S_over = (numOfRows_S < maxNumOfRows_S);
+            readRows_2 = read_N_Rows_From_1_Block(blkBig, t_S, maxNumOfRows_2);
+            S_over = (readRows_2 < maxNumOfRows_2);
         }
-        for (int i = matchMark; i < numOfRows_S; ++i) { 
+        for (int i = matchMark; i < readRows_2; ++i) { 
             // R表记录与S表读取的每一条记录进行比对&连接
             if (t_R > t_S[i]) {
                 prior_match = false;
-                if (i == numOfRows_S - 1) {
+                if (i == readRows_2 - 1) {
                     // 目前为止没有能够连接上的，需要更新标记，以加载下一批数据
-                    pt_S = numOfRows_S;
+                    pt_S = readRows_2;
                 }
                 continue;
             } else if (t_R.join_A(t_S[i])) {
@@ -202,7 +212,7 @@ table_t SORT_MERGE_JOIN() {
     /******************* 三趟扫描 *******************/
     printf("============ 三趟扫描开始 ============\n");
     table_t resTable(joinResultStart);
-    resTable.rowSize = numOfRowInBlk - 1;
+    resTable.rowSize = 2 * sizeOfRow;
     scan_3_SortedJoin(scan_2_Index_R, scan_2_Index_S, resTable);
     return resTable;
 }
@@ -213,92 +223,58 @@ table_t SORT_MERGE_JOIN() {
 
 /**
  * @brief 两趟扫描的中间步骤——按桶连接
- * 可连接的记录一定具有相同的散列值，因而只需遍历一个桶中的所有记录即可
+ * 可连接的记录一定具有相同的散列值，因而只需遍历两表对应编号相同的桶中的所有记录即可
  * 
  * @param numOfBuckets 散列的桶的数量
  * @param scan_1_index_R 
  * @param scan_1_index_S 
- * @return addr_t 连接结果存放区域的最后一块的地址
  */
-addr_t scan_2_HashJoin(int numOfBuckets, addr_t scan_1_index_R[], addr_t scan_1_index_S[]) {
-// addr_t scan_2_HashJoin(int numOfBuckets, addr_t readIndex, addr_t scan_1_index[], addr_t scan_2_index) {
-    // addr_t curAddr = 0;
-    // int numOfRows = numOfRowInBlk * (numOfBuckets / 2);
-    // row_t R_data[numOfRows], S_data[numOfRows];
-    // block_t Sblk, Rblk, resBlk;
-    // resBlk.writeInit(scan_2_index, numOfRowInBlk - 1);
-
-    // Rblk.loadFromDisk(readIndex);
-    // int readRows_R, readRows_S;
-    // while(1) {
-    //     readRows_R = read_N_Rows_From_1_Block(Rblk, R_data, numOfRows);
-    //     for (int i = 0; i < readRows_R; ++i) {
-    //         int R_hash = hashRowsByA(R_data[i], numOfBuckets);
-    //         Sblk.loadFromDisk(scan_1_index[R_hash]);
-    //         while(1) {
-    //             readRows_S = read_N_Rows_From_1_Block(Sblk, S_data, numOfRows);
-    //             for (int j = 0; j < readRows_S; ++j) {
-    //                 if (R_data[i].join_A(S_data[j])) {
-    //                     curAddr = resBlk.writeRow(R_data[i]);
-    //                     curAddr = resBlk.writeRow(S_data[j]);
-    //                 }
-    //             }
-    //             if(readRows_S < numOfRows) {
-    //                 Sblk.freeBlock();
-    //                 break;
-    //             }
-    //         }
-    //     }
-    //     if (readRows_R < numOfRows) {
-    //         Rblk.freeBlock();
-    //         addr_t endAddr = resBlk.writeLastBlock();
-    //         if (endAddr != END_OF_FILE)
-    //             curAddr = endAddr;
-    //         break;
-    //     }
-    // }
-    // return curAddr;
-    
+void scan_2_HashJoin(int numOfBuckets, addr_t scan_1_index_R[], addr_t scan_1_index_S[], table_t &resTable) {
     addr_t curAddr = 0;
     int numOfRows = numOfRowInBlk * (numOfBuckets / 2);
     row_t R_data[numOfRows], S_data[numOfRows];
-    block_t Rblk, Sblk, resBlk;
-    resBlk.writeInit(joinResultStart, numOfRowInBlk - 1);
+    block_t blk1, blk2, resBlk;
+    resBlk.writeInit(resTable.start, numOfRowInBlk - 1);
 
     for (int k = 0; k < numOfBuckets; ++k) {
-        Rblk.loadFromDisk(scan_1_index_R[k]);
-        Sblk.loadFromDisk(scan_1_index_S[k]);
+        blk1.loadFromDisk(scan_1_index_R[k]);
         int readRows_R, readRows_S;
-        bool R_over, S_over;
         while(1) {
-            readRows_R = read_N_Rows_From_1_Block(Rblk, R_data, numOfRows);
+            readRows_R = read_N_Rows_From_1_Block(blk1, R_data, numOfRows);
             insertSort<row_t>(R_data, readRows_R);
-            R_over = (readRows_R < numOfRows); // R表读入记录数量小于numOfRows表明R表已读完
-            readRows_S = read_N_Rows_From_1_Block(Sblk, S_data, numOfRows);
-            insertSort<row_t>(S_data, readRows_S);
-            S_over = (readRows_S < numOfRows); // S表读入记录数量小于numOfRows表明S表已读完
-            for (int i = 0; i < readRows_R; ++i) {
-                for (int j = 0; j < readRows_S; ++j) {
-                    if (R_data[i].join_A(S_data[j])) {
-                        curAddr = resBlk.writeRow(R_data[i]);
-                        curAddr = resBlk.writeRow(S_data[j]);
+            blk2.loadFromDisk(scan_1_index_S[k]);
+            // printRows(R_data, readRows_R);
+            while(1) {
+                readRows_S = read_N_Rows_From_1_Block(blk2, S_data, numOfRows);
+                insertSort<row_t>(S_data, readRows_S);
+                // printRows(S_data, readRows_S);
+                for (int i = 0; i < readRows_R; ++i) {
+                    for (int j = 0; j < readRows_S; ++j) {
+                        if (R_data[i].join_A(S_data[j])) {
+                            curAddr = resBlk.writeRow(R_data[i]);
+                            curAddr = resBlk.writeRow(S_data[j]);
+                            resTable.size += 1;
+                        }
+                        if (R_data[i] < S_data[j])
+                            break;
                     }
                 }
-                if (S_over)
+                if (readRows_S < numOfRows) {
                     break;
+                }
             }
-            if (R_over)
+            blk2.freeBlock();
+            if (readRows_R < numOfRows)
                 break;
         }
-        Rblk.freeBlock();
-        Sblk.freeBlock();
+        blk1.freeBlock();
         if (k == numOfBuckets - 1) {
             addr_t endAddr = resBlk.writeLastBlock();
             if (endAddr != END_OF_FILE)
                 curAddr = endAddr;
         }
     }
-    return curAddr;
+    resTable.end = curAddr;
 }
 
 
@@ -307,23 +283,21 @@ addr_t scan_2_HashJoin(int numOfBuckets, addr_t scan_1_index_R[], addr_t scan_1_
  * 
  * @return addr_t 连接结果存放区域的最后一块的地址
  */
-addr_t HASH_JOIN() {
+table_t HASH_JOIN() {
     /******************* 一趟扫描 *******************/
-    printf("============ 一趟扫描开始 ============\n");
-    int numOfBuckets = numOfBufBlock - 1;   // 散列桶的数量一般取缓冲区块数-1
+    // int numOfBuckets = numOfBufBlock - 1;   // 散列桶的数量一般取缓冲区块数-1
+    int numOfBuckets = 6;
     addr_t scan_1_Index_R[7] = {5300, 5400, 5500, 5600, 5700, 5800, 5900};
     addr_t scan_1_Index_S[7] = {6300, 6400, 6500, 6600, 6700, 6800, 6900};
-    printf("---- 对表R进行分组散列 ----\n");
+    // 对表R进行分组散列
     scan_1_HashToBucket(numOfBuckets, R_start, scan_1_Index_R);
-    printf("---- 对表S进行分组散列 ----\n");
+    // 对表S进行分组散列
     scan_1_HashToBucket(numOfBuckets, S_start, scan_1_Index_S);
 
     /******************* 二趟扫描 *******************/
-    printf("============ 二趟扫描开始 ============\n");
-    // addr_t curAddr = scan_2_HashJoin(numOfBuckets, R_start, scan_1_Index_S, joinResultStart);
-    addr_t curAddr = scan_2_HashJoin(numOfBuckets, scan_1_Index_R, scan_1_Index_S);
-
-    return curAddr;
+    table_t resTable(joinResultStart, 2 * sizeOfRow);
+    scan_2_HashJoin(numOfBuckets, scan_1_Index_R, scan_1_Index_S, resTable);
+    return resTable;
 }
 
 
@@ -331,8 +305,8 @@ addr_t HASH_JOIN() {
 int main() {
     bufferInit();
     // table_t res = NEST_LOOP_JOIN(table_R, table_S);
-    table_t res = SORT_MERGE_JOIN();
-    // table_t res = HASH_JOIN();
+    // table_t res = SORT_MERGE_JOIN();
+    table_t res = HASH_JOIN();
     if (res.size == 0) {
         system("pause");
         return FAIL;
