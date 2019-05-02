@@ -83,7 +83,7 @@ void linearQuery(const table_t &table, table_t &resTable, int val, bool (*cond)(
 
 /**
  * @brief 二分检索
- * 对待检索的表按照匹配条件cmp和匹配值val进行线性检索
+ * 对待检索的表按照匹配条件cmp和匹配值val进行二分检索
  * 
  * @param table 待检索的表信息
  * @param resTable 检索结果表信息
@@ -246,8 +246,8 @@ int main() {
 
     printf("===================== 开始检索S表 ====================\n");
     clear_Buff_IO_Count();
+    addr_t newStartAddr = Result_table_R.end + 1;
     /********* 线性检索与二分检索测试部分 *********/
-    // addr_t newStartAddr = Result_table_R.end + 1;
     // table_t Result_table_S(newStartAddr);
     // linearQuery(table_S, Result_table_S, 60, EQ_cond);
     // binaryQuery(table_S, Result_table_S, 60, cmp);
@@ -256,7 +256,6 @@ int main() {
     // printf("本次共发生%ld次I/O\n\n", buff.numIO);
 
     /********* 索引检索测试部分 *********/
-    addr_t newStartAddr = 1001;
     table_t Result_table_S(newStartAddr);
     printf("----- 未建立索引时进行检索 -----\n");
     searchByIndex_and_Show(table_S, Result_table_S, 60);
