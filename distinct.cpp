@@ -1,4 +1,5 @@
 #include "index.cpp"
+#pragma once
 
 
 const addr_t distinctTableStart = 500;

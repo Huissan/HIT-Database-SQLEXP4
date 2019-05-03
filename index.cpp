@@ -1,6 +1,7 @@
 #include <map>
 #include "utils.cpp"
 #include "BplusTree/BplusTree.h"
+#pragma once
 
 /**
  * @brief 索引相关操作

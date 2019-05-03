@@ -1,5 +1,6 @@
 #include "utils.cpp"
 #include "distinct.cpp"
+#pragma once
 
 
 const addr_t setOperationResultStart = 4000;    // 集合操作结果的起始存放地址

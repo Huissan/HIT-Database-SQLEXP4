@@ -1,5 +1,6 @@
 #include "utils.cpp"
 #include "index.cpp"
+#pragma once
 
 
 /**

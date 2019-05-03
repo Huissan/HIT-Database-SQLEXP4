@@ -1,12 +1,13 @@
 #include "utils.cpp"
 #include "index.cpp"
-#include "condQuery.cpp"
 #include "distinct.cpp"
+#include "condQuery.cpp"
+#include "project.cpp"
 #include "join.cpp"
 #include "setOperations.cpp"
 
 
-void print_IO_Info(tablt_t table) {
+void print_IO_Info(table_t table) {
     printf("\n注：结果写入磁盘块：%d-%d\n", table.start, table.end);
     printf("本次共发生%ld次I/O\n\n", buff.numIO);
     system("pause");
@@ -91,7 +92,28 @@ int main() {
                 } while (select);
                 break;
             } case 2: {
-
+                char tableName;
+                system("cls");
+                printf("由于功能限制，我们只能为您投影表的第一个属性\n\n");
+                do {
+                    printf("您想投影哪个表的第一个属性呢？(R或S)\n");
+                    scanf("%c", &tableName);
+                    if (tableName == 'R') {
+                        printf("将为您投影R的第一个属性：\n");
+                        project(table_R, projectTable);
+                        showResult(projectTable.start, sizeOfRow / 2);
+                        print_IO_Info(projectTable);
+                    } else if (tableName == 'S') {
+                        printf("将为您投影S的第一个属性：\n");
+                        project(table_S, projectTable);
+                        showResult(projectTable.start, sizeOfRow / 2);
+                        print_IO_Info(projectTable);
+                    } else {
+                        printf("不可以有R表或S表以外的选择哦~\n");
+                        system("pause");
+                    }
+                    system("cls");
+                } while (tableName != 'R' && tableName != 'S');
                 break;
             } case 3: {
                 do {
@@ -113,10 +135,10 @@ int main() {
                     else if (select == 1) {
                         printf("查看嵌套循环连接(NEST-LOOP JOIN)的结果：\n");
                         joinTable = NEST_LOOP_JOIN(table_R, table_S);
-                    } else if (select == 2)
+                    } else if (select == 2) {
                         printf("查看排序归并连接(SORT-MERGE JOIN)的结果：\n");
                         joinTable = SORT_MERGE_JOIN(table_R, table_S);
-                    } else if (select == 3)
+                    } else if (select == 3) {
                         printf("查看散列连接(HASH JOIN)的结果：\n");
                         joinTable = HASH_JOIN(table_R, table_S);
                     } else {
@@ -155,10 +177,10 @@ int main() {
                         table_t table1, table2;
                         printf("您想做哪个表对哪个表的差呢？(输入R S或S R)\n");
                         scanf("%c%*c%c", &diffedTable, &diffTable);
-                        if (diffedTable = 'R' && diffedTable == 'S') {
+                        if (diffedTable == 'R' && diffedTable == 'S') {
                             printf("查看R-S的结果：\n");
                             table1 = table_R, table2 = table_S;
-                        } else if (diffedTable = 'S' && diffedTable == 'R') {
+                        } else if (diffedTable == 'S' && diffedTable == 'R') {
                             printf("查看S-R的结果：\n");
                             table1 = table_S, table2 = table_R;
                         } else {
@@ -174,6 +196,7 @@ int main() {
                     }
                     showResult(joinTable.start);
                     print_IO_Info(joinTable);
+                } while (select);
             } default: {
                 printf("不可以做出0-4以外的选择哦~\n");
                 system("pause");
