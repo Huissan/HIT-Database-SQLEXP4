@@ -179,41 +179,13 @@ void scan_3_SortedJoin(table_t table1, table_t table2, table_t &resTable) {
  * 
  * @return table_t 连接结果存放区域的最后一块的地址
  */
-table_t SORT_MERGE_JOIN() {
-    int sizeOfSubTable = numOfRowInBlk * numOfBufBlock;           // 由缓冲区划分出的子表大小
-    int numOfSubTables_R = ceil(1.0 * R_size / sizeOfSubTable);   // R划分出的子表数量
-    int numOfSubTables_S = ceil(1.0 * S_size / sizeOfSubTable);   // S划分出的子表数量
-    /******************* 一趟扫描 *******************/
-    printf("============ 一趟扫描开始 ============\n");
-    // 对表R进行分组排序
-    addr_t scan_1_next = addrOfScan_1;     // 第一趟扫描结果存储的起始地址
-    addr_t scan_1_Index_R, scan_1_Index_S; // R、S表的第一趟扫描结果存储的起始位置索引
-    if ((scan_1_Index_R = scan_1_next) == ADDR_NOT_EXISTS)
-        return FAIL;
-    scan_1_next = scan_1_PartialSort(numOfSubTables_R, scan_1_next, R_start, sizeOfSubTable);
-    // 对表S进行分组排序
-    if ((scan_1_Index_S = scan_1_next) == ADDR_NOT_EXISTS)
-        return FAIL;
-    scan_1_next = scan_1_PartialSort(numOfSubTables_S, scan_1_next, S_start, sizeOfSubTable);
-
-    /******************* 两趟扫描 *******************/
-    printf("============ 两趟扫描开始 ============\n");
-    // 对表R进行归并排序
-    addr_t scan_2_next = addrOfScan_2;     // 第二趟扫描结果存储的起始地址
-    addr_t scan_2_Index_R, scan_2_Index_S; // R、S表的第二趟扫描结果存储的起始位置索引
-    if ((scan_2_Index_R = scan_2_next) == ADDR_NOT_EXISTS)
-        return FAIL;
-    scan_2_next = scan_2_SortMerge(numOfSubTables_R, scan_1_Index_R, scan_2_Index_R);
-    // 对表S进行归并排序
-    if ((scan_2_Index_S = scan_2_next) == ADDR_NOT_EXISTS)
-        return FAIL;
-    scan_2_next = scan_2_SortMerge(numOfSubTables_S, scan_1_Index_S, scan_2_Index_S);
-
-    /******************* 三趟扫描 *******************/
-    printf("============ 三趟扫描开始 ============\n");
+table_t SORT_MERGE_JOIN(table_t table1, table_t table2) {
     table_t resTable(joinResultStart);
     resTable.rowSize = 2 * sizeOfRow;
-    scan_3_SortedJoin(scan_2_Index_R, scan_2_Index_S, resTable);
+    useCluster(table1);
+    useCluster(table2);
+    addr_t indexAddr = useIndex(table1);
+
     return resTable;
 }
 
@@ -304,7 +276,7 @@ table_t HASH_JOIN() {
 int main() {
     bufferInit();
     // table_t res = NEST_LOOP_JOIN(table_R, table_S);
-    // table_t res = SORT_MERGE_JOIN();
+    // table_t res = SORT_MERGE_JOIN(table_R, table_S);
     table_t res = HASH_JOIN();
     if (res.size == 0) {
         system("pause");

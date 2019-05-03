@@ -182,8 +182,9 @@ void loadIndex(addr_t indexStart) {
  * @param table 待做聚簇管理的表
  * @param clusterAddr 聚簇文件的起始地址，若为默认值DEFAULT_ADDR则使用现有的聚簇文件
  *  否则将用该参数覆盖clusterTableMap中对应的条目
+ * @return addr_t 
  */
-void useCluster(table_t table, addr_t clusterAddr = DEFAULT_ADDR) {
+addr_t useCluster(table_t table, addr_t clusterAddr = DEFAULT_ADDR) {
     if (clusterAddr == DEFAULT_ADDR) {
         // 若使用的是默认聚簇地址，则检查当前表是否有对应的聚簇条目
         table_map_t::iterator findCluster = clusterTableMap.find(table.start);
@@ -201,7 +202,9 @@ void useCluster(table_t table, addr_t clusterAddr = DEFAULT_ADDR) {
                 clusterAddr = (iter->second).B + 1;
             }
         } else {
-            return;
+            index_t addrItem = findCluster->second;
+            clusterAddr = addrItem.A;
+            return clusterAddr;
         }
     } else {
         // 若使用的是自定义聚簇地址，则先查看是否有对应的聚簇条目需要覆盖
@@ -217,6 +220,7 @@ void useCluster(table_t table, addr_t clusterAddr = DEFAULT_ADDR) {
     tableClustering(table, clusterAddr);
     printf("\n聚簇完成！\n");
     printf("聚簇所用IO: %d\n\n", buff.numIO);
+    return clusterAddr;
 }
 
 

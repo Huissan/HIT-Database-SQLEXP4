@@ -16,8 +16,7 @@ void tableDistinct(table_t table, addr_t resStartAddr = distinctTableStart) {
     addr_t resAddr = resStartAddr;
 
     // 想去重，先聚簇
-    useCluster(table);
-    addr_t readAddr = clusterTableMap.at(table.start).A;
+    addr_t readAddr = useCluster(table);
     block_t readBlk[numOfUsedBlock], resBlk;
     resBlk.writeInit(resAddr);
     addr_t nextStart = readAddr;
@@ -51,10 +50,10 @@ void tableDistinct(table_t table, addr_t resStartAddr = distinctTableStart) {
     }
 }
 
-// int main() {
-//     bufferInit();
-//     tableDistinct(table_S);
-//     showResult(distinctTableStart);
-//     system("pause");
-//     return 0;
-// }
+int main() {
+    bufferInit();
+    tableDistinct(table_S);
+    showResult(distinctTableStart);
+    system("pause");
+    return 0;
+}

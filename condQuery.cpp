@@ -158,10 +158,7 @@ void binaryQuery(const table_t &table, table_t &resTable, int val, int (*cmp)(ro
  */
 void indexQuery(const table_t &table, table_t &resTable, int val) {
     addr_t clusterAddr, indexAddr, curAddr = 0;
-    useCluster(table);
-    index_t addrItem = clusterTableMap.at(table.start);
-    clusterAddr = addrItem.A;
-
+    clusterAddr = useCluster(table);
     indexAddr = useIndex(table);
 
     // 加载索引，读取对应的聚簇存放地址
