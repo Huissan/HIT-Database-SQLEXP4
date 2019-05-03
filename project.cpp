@@ -46,13 +46,13 @@ addr_t project(addr_t readStartAddr, addr_t resStartAddr) {
 
 
 /**************************** main ****************************/
-int main() {
-    bufferInit();
-    addr_t resEndAddr = project(R_start, projStart);
-    showResult(projStart, sizeOfRow / 2);
-    if (resEndAddr)
-        printf("\n注：结果写入磁盘块：2000-%d\n", resEndAddr);
-    printf("本次共发生%ld次I/O\n", buff.numIO);
-    system("pause");
-    return OK;
-}
+// int main() {
+//     bufferInit();
+//     addr_t resEndAddr = project(R_start, projStart);
+//     showResult(projStart, sizeOfRow / 2);
+//     if (resEndAddr)
+//         printf("\n注：结果写入磁盘块：2000-%d\n", resEndAddr);
+//     printf("本次共发生%ld次I/O\n", buff.numIO);
+//     system("pause");
+//     return OK;
+// }

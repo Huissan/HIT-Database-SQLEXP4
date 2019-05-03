@@ -169,19 +169,19 @@ void tablesUnion(table_t table1, table_t table2, table_t &resTable) {
 
 
 /**************************** main ****************************/
-int main() {
-    bufferInit();
-    clear_Buff_IO_Count();
-    table_t res(setOperationResultStart);
-    tablesUnion(table_R, table_S, res);
-    // table_t res = tablesIntersect(table_R, table_S, res);
-    // table_t res = tablesDiff(table_R, table_S, res);
-    // table_t res = tablesDiff(table_S, table_R, res);
-    showResult(res.start);
-    int numOfUsedBlocks = ceil(1.0 * res.size / (numOfRowInBlk));
-    printf("\n注：结果写入起始磁盘块：4000-%d\n", res.start + numOfUsedBlocks - 1);
-    printf("本次共发生%ld次I/O\n\n", buff.numIO);
+// int main() {
+//     bufferInit();
+//     clear_Buff_IO_Count();
+//     table_t res(setOperationResultStart);
+//     tablesUnion(table_R, table_S, res);
+//     // table_t res = tablesIntersect(table_R, table_S, res);
+//     // table_t res = tablesDiff(table_R, table_S, res);
+//     // table_t res = tablesDiff(table_S, table_R, res);
+//     showResult(res.start);
+//     int numOfUsedBlocks = ceil(1.0 * res.size / (numOfRowInBlk));
+//     printf("\n注：结果写入起始磁盘块：4000-%d\n", res.start + numOfUsedBlocks - 1);
+//     printf("本次共发生%ld次I/O\n\n", buff.numIO);
 
-    system("pause");
-    return OK;
-}
+//     system("pause");
+//     return OK;
+// }

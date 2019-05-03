@@ -375,19 +375,19 @@ table_t HASH_JOIN() {
 
 
 /**************************** main ****************************/
-int main() {
-    bufferInit();
-    // table_t res = NEST_LOOP_JOIN(table_R, table_S);
-    table_t res = SORT_MERGE_JOIN(table_R, table_S);
-    // table_t res = HASH_JOIN();
-    if (res.size == 0) {
-        system("pause");
-        return FAIL;
-    }
-    showResult(joinResultStart, 2 * sizeOfRow);
-    int numOfUsedBlocks = ceil(1.0 * res.size / (numOfRowInBlk / 2));
-    printf("\n注：结果写入磁盘块序号：3000-%d\n", res.start + numOfUsedBlocks - 1);
-    printf("\n本次共发生%ld次I/O\n", buff.numIO);
-    system("pause");
-    return OK;
-}
+// int main() {
+//     bufferInit();
+//     // table_t res = NEST_LOOP_JOIN(table_R, table_S);
+//     table_t res = SORT_MERGE_JOIN(table_R, table_S);
+//     // table_t res = HASH_JOIN();
+//     if (res.size == 0) {
+//         system("pause");
+//         return FAIL;
+//     }
+//     showResult(joinResultStart, 2 * sizeOfRow);
+//     int numOfUsedBlocks = ceil(1.0 * res.size / (numOfRowInBlk / 2));
+//     printf("\n注：结果写入磁盘块序号：3000-%d\n", res.start + numOfUsedBlocks - 1);
+//     printf("\n本次共发生%ld次I/O\n", buff.numIO);
+//     system("pause");
+//     return OK;
+// }

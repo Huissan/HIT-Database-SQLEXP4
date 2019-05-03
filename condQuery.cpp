@@ -223,44 +223,44 @@ void searchByIndex_and_Show(const table_t &table, table_t &resTable, int val) {
 
 
 /**************************** main ****************************/
-int main() {
-    bufferInit();
-    table_t Result_table_R(condQueryStart);
-    printf("===================== 开始检索R表 ====================\n");
-    clear_Buff_IO_Count();
-    /********* 线性检索与二分检索测试部分 *********/
-    // linearQuery(table_R, Result_table_R, 40, EQ_cond);
-    // binaryQuery(table_R, Result_table_R, 40, cmp);
-    // showResult(Result_table_R.start);
-    // printf("\n注：结果写入磁盘块：%d-%d\n", Result_table_R.start, Result_table_R.end);
-    // printf("本次共发生%ld次I/O\n\n", buff.numIO);
+// int main() {
+//     bufferInit();
+//     table_t Result_table_R(condQueryStart);
+//     printf("===================== 开始检索R表 ====================\n");
+//     clear_Buff_IO_Count();
+//     /********* 线性检索与二分检索测试部分 *********/
+//     // linearQuery(table_R, Result_table_R, 40, EQ_cond);
+//     // binaryQuery(table_R, Result_table_R, 40, cmp);
+//     // showResult(Result_table_R.start);
+//     // printf("\n注：结果写入磁盘块：%d-%d\n", Result_table_R.start, Result_table_R.end);
+//     // printf("本次共发生%ld次I/O\n\n", buff.numIO);
 
-    /********* 索引检索测试部分 *********/
-    printf("----- 未建立索引时进行检索 -----\n");
-    searchByIndex_and_Show(table_R, Result_table_R, 40);
-    printf("----- 已建立索引时进行检索 -----\n");
-    searchByIndex_and_Show(table_R, Result_table_R, 40);
+//     /********* 索引检索测试部分 *********/
+//     printf("----- 未建立索引时进行检索 -----\n");
+//     searchByIndex_and_Show(table_R, Result_table_R, 40);
+//     printf("----- 已建立索引时进行检索 -----\n");
+//     searchByIndex_and_Show(table_R, Result_table_R, 40);
 
-    printf("===================== 开始检索S表 ====================\n");
-    clear_Buff_IO_Count();
-    addr_t newStartAddr = Result_table_R.end + 1;
-    /********* 线性检索与二分检索测试部分 *********/
-    // table_t Result_table_S(newStartAddr);
-    // linearQuery(table_S, Result_table_S, 60, EQ_cond);
-    // binaryQuery(table_S, Result_table_S, 60, cmp);
-    // showResult(Result_table_S.start);
-    // printf("\n注：结果写入磁盘块：%d-%d\n", Result_table_S.start, Result_table_S.end);
-    // printf("本次共发生%ld次I/O\n\n", buff.numIO);
+//     printf("===================== 开始检索S表 ====================\n");
+//     clear_Buff_IO_Count();
+//     addr_t newStartAddr = Result_table_R.end + 1;
+//     /********* 线性检索与二分检索测试部分 *********/
+//     // table_t Result_table_S(newStartAddr);
+//     // linearQuery(table_S, Result_table_S, 60, EQ_cond);
+//     // binaryQuery(table_S, Result_table_S, 60, cmp);
+//     // showResult(Result_table_S.start);
+//     // printf("\n注：结果写入磁盘块：%d-%d\n", Result_table_S.start, Result_table_S.end);
+//     // printf("本次共发生%ld次I/O\n\n", buff.numIO);
 
-    /********* 索引检索测试部分 *********/
-    table_t Result_table_S(newStartAddr);
-    printf("----- 未建立索引时进行检索 -----\n");
-    searchByIndex_and_Show(table_S, Result_table_S, 60);
-    printf("----- 已建立索引时进行检索 -----\n");
-    searchByIndex_and_Show(table_S, Result_table_S, 60);
-    printf("=================== 看看R是否有索引 ==================\n");
-    searchByIndex_and_Show(table_R, Result_table_R, 40);
+//     /********* 索引检索测试部分 *********/
+//     table_t Result_table_S(newStartAddr);
+//     printf("----- 未建立索引时进行检索 -----\n");
+//     searchByIndex_and_Show(table_S, Result_table_S, 60);
+//     printf("----- 已建立索引时进行检索 -----\n");
+//     searchByIndex_and_Show(table_S, Result_table_S, 60);
+//     printf("=================== 看看R是否有索引 ==================\n");
+//     searchByIndex_and_Show(table_R, Result_table_R, 40);
 
-    system("pause");
-    return OK;
-}
+//     system("pause");
+//     return OK;
+// }
