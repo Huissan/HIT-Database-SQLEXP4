@@ -6,26 +6,15 @@ const addr_t setOperationResultStart = 4000;    // 集合操作结果的起始存放地址
 
 
 /**
- * @brief 表的并操作
- * 
- * @param R_addr 第一个表在磁盘中的起始地址
- * @param S_addr 第二个表在磁盘中的起始地址
- */
-void tablesUnion(addr_t R_addr, addr_t S_addr) {
-
-}
-
-
-/**
  * @brief 表的交操作
  * 采用嵌套循环的方法检索符合条件的记录
  * 
  * @param table1 第一个表的相关信息
  * @param table2 第二个表的相关信息
- * @return table_t 交操作结果存放区域的信息表
+ * @param resTable 交操作结果存放区域的信息表
  */
-table_t tablesIntersect(table_t table1, table_t table2) {
-    table_t resTable(setOperationResultStart), bigTable, smallTable;
+void tablesIntersect(table_t table1, table_t table2, table_t &resTable) {
+    table_t bigTable, smallTable;
     if (table1.size > table2.size) {
         bigTable = table1;
         smallTable = table2;
@@ -72,7 +61,6 @@ table_t tablesIntersect(table_t table1, table_t table2) {
             break;
         }
     }
-    return resTable;
 }
 
 
@@ -82,10 +70,9 @@ table_t tablesIntersect(table_t table1, table_t table2) {
  * 
  * @param diffedTable 被差表的相关信息
  * @param diffTable 差表的相关信息
- * @return table_t 差操作结果存放区域的信息表
+ * @param resTable 差操作结果存放区域的信息表
  */
-table_t tablesDiff(table_t diffedTable, table_t diffTable) {
-    table_t resTable(setOperationResultStart);
+void tablesDiff(table_t diffedTable, table_t diffTable, table_t &resTable) {
     int numOfSeriesBlock = 6;
     int numOfRows_1 = numOfRowInBlk * numOfSeriesBlock, numOfRows_2 = numOfRowInBlk;
     addr_t diffedTableAddr = diffedTable.start, diffTableAddr = diffTable.start;
@@ -137,22 +124,59 @@ table_t tablesDiff(table_t diffedTable, table_t diffTable) {
             break;
         }
     }
-    return resTable;
+}
+
+
+/**
+ * @brief 表的并操作
+ * 
+ * @param table1 第一个表的相关信息
+ * @param table2 第二个表的相关信息
+ * @param resTable 并操作结果存放区域的信息表
+ */
+void tablesUnion(table_t table1, table_t table2, table_t &resTable) {
+    table_t bigTable, smallTable;
+    table_t diffTable(6000);
+    if (table1.size > table2.size) {
+        bigTable = table1;
+        smallTable = table2;
+    } else {
+        bigTable = table2;
+        smallTable = table1;  
+    }
+    tablesDiff(smallTable, bigTable, diffTable);
+    row_t r, emptyRow;
+    block_t blk, resBlk;
+    resBlk.writeInit(resTable.start);
+    addr_t tableAddr[2] = {diffTable.start, bigTable.start};
+
+    for (int i = 0; i < 2; ++i) {
+        blk.loadFromDisk(tableAddr[i]);
+        while(1) {
+            r = blk.getNewRow();
+            if (r == emptyRow) {
+                blk.freeBlock();
+                break;
+            }
+            resBlk.writeRow(r);
+            resTable.size += 1;
+        }
+    }
+    DropFiles(diffTable.start);
+    addr_t endAddr = resBlk.writeLastBlock();
+    resTable.end = endAddr;
 }
 
 
 /**************************** main ****************************/
 int main() {
     bufferInit();
-    // useCluster(table_R, 8000);
-    // table_t a = {8000, 112};
     clear_Buff_IO_Count();
-    // table_t res = tablesUnion(table_R, table_S);
-    // table_t res = tablesIntersect(table_R, table_S);
-    // table_t res = tablesDiff(table_R, table_S);
-    table_t res = tablesDiff(table_S, table_R);
-    // useCluster(res, 4000);
-    // tableDistinct(res, res.start);
+    table_t res(setOperationResultStart);
+    tablesUnion(table_R, table_S, res);
+    // table_t res = tablesIntersect(table_R, table_S, res);
+    // table_t res = tablesDiff(table_R, table_S, res);
+    // table_t res = tablesDiff(table_S, table_R, res);
     showResult(res.start);
     int numOfUsedBlocks = ceil(1.0 * res.size / (numOfRowInBlk));
     printf("\n注：结果写入起始磁盘块：4000-%d\n", res.start + numOfUsedBlocks - 1);

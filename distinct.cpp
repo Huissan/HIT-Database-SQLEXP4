@@ -50,10 +50,12 @@ void tableDistinct(table_t table, addr_t resStartAddr = distinctTableStart) {
     }
 }
 
-int main() {
-    bufferInit();
-    tableDistinct(table_S);
-    showResult(distinctTableStart);
-    system("pause");
-    return 0;
-}
+
+/**************************** main ****************************/
+// int main() {
+//     bufferInit();
+//     tableDistinct(table_S);
+//     showResult(distinctTableStart);
+//     system("pause");
+//     return 0;
+// }
