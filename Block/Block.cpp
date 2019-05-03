@@ -184,7 +184,7 @@ addr_t Block::readNextAddr() {
         nextAddr[i] = *(blkData + offset + i);
     }
     addr_t next;
-    if (sscanf(nextAddr, "%4d", &next) < 0)
+    if (sscanf(nextAddr, "%8d", &next) < 0)
         next = END_OF_FILE;
     return next;
 }

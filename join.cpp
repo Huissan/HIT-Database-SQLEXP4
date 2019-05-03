@@ -285,8 +285,7 @@ void scan_2_HashJoin(int numOfBuckets, addr_t scan_1_index_R[], addr_t scan_1_in
  */
 table_t HASH_JOIN() {
     /******************* 一趟扫描 *******************/
-    // int numOfBuckets = numOfBufBlock - 1;   // 散列桶的数量一般取缓冲区块数-1
-    int numOfBuckets = 6;
+    int numOfBuckets = 6;   // 散列桶的数量，在试验中证明取当前值时IO数量最小
     addr_t scan_1_Index_R[7] = {5300, 5400, 5500, 5600, 5700, 5800, 5900};
     addr_t scan_1_Index_S[7] = {6300, 6400, 6500, 6600, 6700, 6800, 6900};
     // 对表R进行分组散列
