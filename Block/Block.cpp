@@ -349,6 +349,7 @@ void DropFiles(const addr_t fileStartAddr) {
             curAddr = next;
             next = delBlk.readNextAddr();
             dropBlockOnDisk(curAddr);
+            delBlk.freeBlock();
         } while (next != END_OF_FILE);
     }
 }

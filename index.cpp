@@ -27,7 +27,7 @@ BPlusTree BPTR;
  * @brief 表的聚簇操作：对table进行聚簇，并将聚簇结果存入磁盘中
  * 聚簇实际上就是使整张表有序，一共分为两步，分别对应两趟归并排序
  * 第一步：表的组内排序，对应scan_1_PartialSort
- * 第二步：表的组间排序，对应scan_2_SortMerge
+ * 第二步：表的组间归并排序，对应scan_2_SortMerge
  * 
  * @param table 当前待聚簇表信息
  * @param clusterAddr 聚簇结果的起始存储位置
@@ -44,7 +44,11 @@ void tableClustering(table_t table, addr_t clusterAddr) {
     // 聚簇操作：两趟归并排序
     scan_1_PartialSort(numOfSubTables, scan_1_Index, table.start, sizeOfSubTable);
     addr_t endAddr = scan_2_SortMerge(numOfSubTables, scan_1_Index, clusterAddr);
-    DropFiles(scan_1_Index);
+    // 删除聚簇过程中产生的临时文件
+    for (int i = 0; i < numOfSubTables; ++i) {
+        addr_t next = scan_1_Index + i * 8;
+        DropFiles(next);
+    }
     if (endAddr == ADDR_NOT_EXISTS)
         error("二趟扫描出现错误！");
 
