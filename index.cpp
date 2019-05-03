@@ -57,7 +57,7 @@ void tableClustering(table_t table, addr_t clusterAddr) {
 /**
  * @brief 建立索引文件
  * 索引格式：(索引字段值, 第一次出现该值的索引块地址)
- * 前提：被索引的表需经过聚簇操作
+ * 前提：被索引的表需经过聚簇操作，在clusterTableMap中有对应的映射项
  * 
  * @param clusteredTableStart 被索引的聚簇表的起始地址
  * @param indexStart 索引文件的起始地址
