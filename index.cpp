@@ -44,6 +44,7 @@ void tableClustering(table_t table, addr_t clusterAddr) {
     // 聚簇操作：两趟归并排序
     scan_1_PartialSort(numOfSubTables, scan_1_Index, table.start, sizeOfSubTable);
     addr_t endAddr = scan_2_SortMerge(numOfSubTables, scan_1_Index, clusterAddr);
+    DropFiles(scan_1_Index);
     if (endAddr == ADDR_NOT_EXISTS)
         error("二趟扫描出现错误！");
 
