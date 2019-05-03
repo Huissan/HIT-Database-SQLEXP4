@@ -8,70 +8,85 @@
 
 
 void print_IO_Info(table_t table) {
-    printf("\næ³¨ï¼šç»“æžœå†™å…¥ç£ç›˜å—ï¼š%d-%d\n", table.start, table.end);
-    printf("æœ¬æ¬¡å…±å‘ç”Ÿ%ldæ¬¡I/O\n\n", buff.numIO);
+    printf("\n×¢£º½á¹ûÐ´Èë´ÅÅÌ¿é£º%d-%d\n", table.start, table.end);
+    printf("±¾´Î¹²·¢Éú%ld´ÎI/O\n\n", buff.numIO);
     system("pause");
+}
+
+
+void dropResultTable(table_t res) {
+    if (res.size)
+        DropFiles(res.start);
+    res.size = 0;
 }
 
 
 int main() {
     bufferInit();
+    useCluster(table_R);
+    useCluster(table_S);
     int select;
     table_t condQueryTable(condQueryStart);
     table_t projectTable(projStart);
     table_t joinTable(joinResultStart);
+    joinTable.rowSize = 2 * sizeOfRow;
     table_t setOperationTable(setOperationResultStart);
 
-    do {
+    while(1) {
         system("cls");
-        printf("æ‚¨æƒ³çœ‹å“ªä¸ªåŠŸèƒ½æ¼”ç¤ºå‘¢ï¼Ÿ\n\n");
+        printf("ÄúÏë¿´ÄÄ¸ö¹¦ÄÜÑÝÊ¾ÄØ£¿\n\n");
         printf("====================================\n");
-        printf("0. é€€å‡º\n");
-        printf("1. æ£€ç´¢\n");
-        printf("2. æŠ•å½±\n");
-        printf("3. è¿žæŽ¥\n");
-        printf("4. é›†åˆæ“ä½œ\n");
+        printf("0. ÍË³ö\n");
+        printf("1. ¼ìË÷\n");
+        printf("2. Í¶Ó°\n");
+        printf("3. Á¬½Ó\n");
+        printf("4. ¼¯ºÏ²Ù×÷\n");
         printf("====================================\n\n");
-        printf("è¯·ç»™å‡ºæ‚¨çš„é€‰æ‹©ï¼š");
-        scanf("%d", &select);
+        printf("Çë¸ø³öÄúµÄÑ¡Ôñ£º");
+        cin >> select;
 
         if (select == 0) {
-            printf("\né€€å‡ºæ¼”ç¤º...\n\n");
+            printf("\nÍË³öÑÝÊ¾...\n\n");
             break;
         }
         switch(select) {
             case 0:
                 break;
             case 1: {
-                do {
+                while (1) {
                     system("cls");
                     char tableName;
                     table_t table;
                     int val;
-                    printf("æ‚¨æƒ³çœ‹å“ªç§æ£€ç´¢æ–¹å¼çš„æ¼”ç¤ºå‘¢ï¼Ÿ\n\n");
+                    printf("ÄúÏë¿´ÄÄÖÖ¼ìË÷·½Ê½µÄÑÝÊ¾ÄØ£¿\n\n");
                     printf("====================================\n");
-                    printf("0. å›žåˆ°ä¸Šä¸€çº§\n");
-                    printf("1. çº¿æ€§æ£€ç´¢\n");
-                    printf("2. äºŒåˆ†æ£€ç´¢\n");
-                    printf("3. ç´¢å¼•æ£€ç´¢\n");
+                    printf("0. »Øµ½ÉÏÒ»¼¶\n");
+                    printf("1. ÏßÐÔ¼ìË÷\n");
+                    printf("2. ¶þ·Ö¼ìË÷\n");
+                    printf("3. Ë÷Òý¼ìË÷\n");
                     printf("====================================\n\n");
-                    printf("è¯·ç»™å‡ºæ‚¨çš„é€‰æ‹©ï¼š");
-                    scanf("%d", &select);
-                    printf("\næ‚¨æƒ³çœ‹Rè¡¨è¿˜æ˜¯Sè¡¨ï¼Ÿ(è¾“å…¥Ræˆ–S)\n");
-                    scanf("%c", &tableName);
+                    printf("Çë¸ø³öÄúµÄÑ¡Ôñ£º");
+                    cin >> select;
+
+                    if (select == 0)
+                        break;
+
+                    printf("\nÄúÏë¿´R±í»¹ÊÇS±í£¿(ÊäÈëR»òS)\n");
+                    cin >> tableName;
                     if (tableName == 'R') {
                         table = table_R;
                         val = 40;
-                    } else if (tableName = 'S') {
+                    } else if (tableName == 'S') {
                         table = table_S;
                         val = 60;
                     } else {
-                        printf("ä¸å¯ä»¥è¾“å…¥Ræˆ–Sä»¥å¤–çš„ä»»ä½•ä¸œè¥¿å™¢~\n");
+                        printf("²»¿ÉÒÔÊäÈëR»òSÒÔÍâµÄÈÎºÎ¶«Î÷àÞ~\n");
                         system("pause");
                         continue;
                     }
 
                     system("cls");
+                    dropResultTable(condQueryTable);
                     clear_Buff_IO_Count();
                     if (select == 1) {
                         linearQuery(table, condQueryTable, val, EQ_cond);
@@ -85,126 +100,148 @@ int main() {
                         searchByIndex_and_Show(table, condQueryTable, val);
                         system("pause");
                     } else {
-                        printf("ä¸å¯ä»¥åšå‡º0-3ä»¥å¤–çš„é€‰æ‹©å“¦~\n");
+                        printf("²»¿ÉÒÔ×ö³ö0-3ÒÔÍâµÄÑ¡ÔñÅ¶~\n");
                         system("pause");
                         continue;
                     }
-                } while (select);
+                };
                 break;
             } case 2: {
                 char tableName;
                 system("cls");
-                printf("ç”±äºŽåŠŸèƒ½é™åˆ¶ï¼Œæˆ‘ä»¬åªèƒ½ä¸ºæ‚¨æŠ•å½±è¡¨çš„ç¬¬ä¸€ä¸ªå±žæ€§\n\n");
+                printf("ÓÉÓÚ¹¦ÄÜÏÞÖÆ£¬ÎÒÃÇÖ»ÄÜÎªÄúÍ¶Ó°±íµÄµÚÒ»¸öÊôÐÔ\n\n");
                 do {
-                    printf("æ‚¨æƒ³æŠ•å½±å“ªä¸ªè¡¨çš„ç¬¬ä¸€ä¸ªå±žæ€§å‘¢ï¼Ÿ(Ræˆ–S)\n");
-                    scanf("%c", &tableName);
+                    printf("ÄúÏëÍ¶Ó°ÄÄ¸ö±íµÄµÚÒ»¸öÊôÐÔÄØ£¿(R»òS)\n");
+                    cin >> tableName;
+                    dropResultTable(projectTable);
                     if (tableName == 'R') {
-                        printf("å°†ä¸ºæ‚¨æŠ•å½±Rçš„ç¬¬ä¸€ä¸ªå±žæ€§ï¼š\n");
+                        printf("½«ÎªÄúÍ¶Ó°RµÄµÚÒ»¸öÊôÐÔ£º\n");
                         project(table_R, projectTable);
                         showResult(projectTable.start, sizeOfRow / 2);
                         print_IO_Info(projectTable);
                     } else if (tableName == 'S') {
-                        printf("å°†ä¸ºæ‚¨æŠ•å½±Sçš„ç¬¬ä¸€ä¸ªå±žæ€§ï¼š\n");
+                        printf("½«ÎªÄúÍ¶Ó°SµÄµÚÒ»¸öÊôÐÔ£º\n");
                         project(table_S, projectTable);
                         showResult(projectTable.start, sizeOfRow / 2);
                         print_IO_Info(projectTable);
                     } else {
-                        printf("ä¸å¯ä»¥æœ‰Rè¡¨æˆ–Sè¡¨ä»¥å¤–çš„é€‰æ‹©å“¦~\n");
+                        printf("²»¿ÉÒÔÓÐR±í»òS±íÒÔÍâµÄÑ¡ÔñÅ¶~\n");
                         system("pause");
                     }
                     system("cls");
                 } while (tableName != 'R' && tableName != 'S');
                 break;
             } case 3: {
-                do {
+                while(1) {
                     system("cls");
-                    printf("æ‚¨æƒ³çœ‹å“ªç§è¿žæŽ¥æ–¹å¼çš„æ¼”ç¤ºå‘¢ï¼Ÿ\n\n");
+                    printf("ÄúÏë¿´ÄÄÖÖÁ¬½Ó·½Ê½µÄÑÝÊ¾ÄØ£¿\n\n");
                     printf("====================================\n");
-                    printf("0. å›žåˆ°ä¸Šä¸€çº§\n");
-                    printf("1. åµŒå¥—å¾ªçŽ¯è¿žæŽ¥(NEST-LOOP JOIN)\n");
-                    printf("2. æŽ’åºå½’å¹¶è¿žæŽ¥(SORT-MERGE JOIN)\n");
-                    printf("3. æ•£åˆ—è¿žæŽ¥(HASH JOIN)\n");
+                    printf("0. »Øµ½ÉÏÒ»¼¶\n");
+                    printf("1. Ç¶Ì×Ñ­»·Á¬½Ó(NEST-LOOP JOIN)\n");
+                    printf("2. ÅÅÐò¹é²¢Á¬½Ó(SORT-MERGE JOIN)\n");
+                    printf("3. É¢ÁÐÁ¬½Ó(HASH JOIN)\n");
                     printf("====================================\n\n");
-                    printf("è¯·ç»™å‡ºæ‚¨çš„é€‰æ‹©ï¼š");
-                    scanf("%d", &select);
+                    printf("Çë¸ø³öÄúµÄÑ¡Ôñ£º");
+                    cin >> select;
 
                     system("cls");
                     clear_Buff_IO_Count();
                     if (select == 0)
                         break;
-                    else if (select == 1) {
-                        printf("æŸ¥çœ‹åµŒå¥—å¾ªçŽ¯è¿žæŽ¥(NEST-LOOP JOIN)çš„ç»“æžœï¼š\n");
+
+                    dropResultTable(joinTable);
+                    if (select == 1) {
+                        printf("²é¿´Ç¶Ì×Ñ­»·Á¬½Ó(NEST-LOOP JOIN)µÄ½á¹û£º\n");
                         joinTable = NEST_LOOP_JOIN(table_R, table_S);
                     } else if (select == 2) {
-                        printf("æŸ¥çœ‹æŽ’åºå½’å¹¶è¿žæŽ¥(SORT-MERGE JOIN)çš„ç»“æžœï¼š\n");
+                        printf("²é¿´ÅÅÐò¹é²¢Á¬½Ó(SORT-MERGE JOIN)µÄ½á¹û£º\n");
                         joinTable = SORT_MERGE_JOIN(table_R, table_S);
                     } else if (select == 3) {
-                        printf("æŸ¥çœ‹æ•£åˆ—è¿žæŽ¥(HASH JOIN)çš„ç»“æžœï¼š\n");
+                        printf("²é¿´É¢ÁÐÁ¬½Ó(HASH JOIN)µÄ½á¹û£º\n");
                         joinTable = HASH_JOIN(table_R, table_S);
                     } else {
-                        printf("ä¸å¯ä»¥åšå‡º0-3ä»¥å¤–çš„é€‰æ‹©å“¦~\n");
+                        printf("²»¿ÉÒÔ×ö³ö0-3ÒÔÍâµÄÑ¡ÔñÅ¶~\n");
                         system("pause");
                         continue;
                     }
-                    showResult(joinTable.start);
+                    showResult(joinTable.start, joinTable.rowSize);
                     print_IO_Info(joinTable);
-                } while (select);
+                }
+                break;
             } case 4: {
-                do {
+                while(1) {
                     system("cls");
-                    printf("æ‚¨æƒ³çœ‹å“ªç§é›†åˆæ“ä½œçš„æ¼”ç¤ºå‘¢ï¼Ÿ\n\n");
+                    printf("ÄúÏë¿´ÄÄÖÖ¼¯ºÏ²Ù×÷µÄÑÝÊ¾ÄØ£¿\n\n");
                     printf("====================================\n");
-                    printf("0. å›žåˆ°ä¸Šä¸€çº§\n");
-                    printf("1. å¹¶\n");
-                    printf("2. äº¤\n");
-                    printf("3. å·®\n");
+                    printf("0. »Øµ½ÉÏÒ»¼¶\n");
+                    printf("1. ²¢\n");
+                    printf("2. ½»\n");
+                    printf("3. ²î\n");
                     printf("====================================\n\n");
-                    printf("è¯·ç»™å‡ºæ‚¨çš„é€‰æ‹©ï¼š");
-                    scanf("%d", &select);
+                    printf("Çë¸ø³öÄúµÄÑ¡Ôñ£º");
+                    cin >> select;
 
                     system("cls");
                     clear_Buff_IO_Count();
                     if (select == 0)
                         break;
-                    else if (select == 1) {
-                        printf("æŸ¥çœ‹RâˆªSçš„ç»“æžœï¼š\n");
+
+                    dropResultTable(setOperationTable);
+                    if (select == 1) {
+                        printf("²é¿´R¡ÈSµÄ½á¹û£º\n");
                         tablesUnion(table_R, table_S, setOperationTable);
                     } else if (select == 2) {
-                        printf("æŸ¥çœ‹Râˆ©Sçš„ç»“æžœï¼š\n");
+                        printf("²é¿´R¡ÉSµÄ½á¹û£º\n");
                         tablesIntersect(table_R, table_S, setOperationTable);
                     } else if (select == 3) {
                         char diffedTable, diffTable;
                         table_t table1, table2;
-                        printf("æ‚¨æƒ³åšå“ªä¸ªè¡¨å¯¹å“ªä¸ªè¡¨çš„å·®å‘¢ï¼Ÿ(è¾“å…¥R Sæˆ–S R)\n");
-                        scanf("%c%*c%c", &diffedTable, &diffTable);
-                        if (diffedTable == 'R' && diffedTable == 'S') {
-                            printf("æŸ¥çœ‹R-Sçš„ç»“æžœï¼š\n");
+                        printf("ÄúÏë×öÄÄ¸ö±í¶ÔÄÄ¸ö±íµÄ²îÄØ£¿(ÊäÈëR S»òS R)\n");
+                        cin >> diffedTable >> diffTable;
+                        if (diffedTable == 'R' && diffTable == 'S') {
+                            printf("²é¿´R-SµÄ½á¹û£º\n");
                             table1 = table_R, table2 = table_S;
-                        } else if (diffedTable == 'S' && diffedTable == 'R') {
-                            printf("æŸ¥çœ‹S-Rçš„ç»“æžœï¼š\n");
+                        } else if (diffedTable == 'S' && diffTable == 'R') {
+                            printf("²é¿´S-RµÄ½á¹û£º\n");
                             table1 = table_S, table2 = table_R;
                         } else {
-                            printf("\"R S\"ä»¥åŠ\"S R\"ä»¥å¤–çš„è¾“å…¥éƒ½æ˜¯ä¸å…è®¸çš„å“¦~\n");
+                            printf("\"R S\"ÒÔ¼°\"S R\"ÒÔÍâµÄÊäÈë¶¼ÊÇ²»ÔÊÐíµÄÅ¶~\n");
                             system("pause");
                             continue;
                         }
                         tablesDiff(table1, table2, setOperationTable);
                     } else {
-                        printf("ä¸å¯ä»¥åšå‡º0-3ä»¥å¤–çš„é€‰æ‹©å“¦~\n");
+                        printf("²»¿ÉÒÔ×ö³ö0-3ÒÔÍâµÄÑ¡ÔñÅ¶~\n");
                         system("pause");
                         continue;
                     }
-                    showResult(joinTable.start);
-                    print_IO_Info(joinTable);
-                } while (select);
+                    showResult(setOperationTable.start);
+                    print_IO_Info(setOperationTable);
+                }
+                break;
             } default: {
-                printf("ä¸å¯ä»¥åšå‡º0-4ä»¥å¤–çš„é€‰æ‹©å“¦~\n");
+                printf("²»¿ÉÒÔ×ö³ö0-4ÒÔÍâµÄÑ¡ÔñÅ¶~\n");
                 system("pause");
                 break;
             }
         }
-    } while(select != 0);
-
+    }
+    dropResultTable(condQueryTable);
+    dropResultTable(projectTable);
+    dropResultTable(joinTable);
+    dropResultTable(setOperationTable);
+    // Çå³ý¾Û´ØÏî
+    for (auto iter = clusterTableMap.begin(); iter != clusterTableMap.end(); ++iter) {
+        index_t addrItem = iter->second;
+        addr_t clusterAddr = addrItem.A;
+        DropFiles(clusterAddr);
+    }
+    // Çå³ýË÷ÒýÏî
+    for (auto iter = indexTableMap.begin(); iter != indexTableMap.end(); ++iter) {
+        index_t addrItem = iter->second;
+        addr_t indexAddr = addrItem.A;
+        DropFiles(indexAddr);
+    }
     system("pause");
     return OK;
 }

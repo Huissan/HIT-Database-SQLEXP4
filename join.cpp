@@ -358,19 +358,24 @@ void scan_2_HashJoin(int numOfBuckets, addr_t scan_1_index_R[], addr_t scan_1_in
  * 
  * @return addr_t 连接结果存放区域的最后一块的地址
  */
-table_t HASH_JOIN() {
+table_t HASH_JOIN(table_t table1, table_t table2) {
     /******************* 一趟扫描 *******************/
     int numOfBuckets = 6;   // 散列桶的数量，在试验中证明取当前值时IO数量最小
     addr_t scan_1_Index_R[7] = {5300, 5400, 5500, 5600, 5700, 5800, 5900};
     addr_t scan_1_Index_S[7] = {6300, 6400, 6500, 6600, 6700, 6800, 6900};
     // 对表R进行分组散列
-    scan_1_HashToBucket(numOfBuckets, R_start, scan_1_Index_R);
+    scan_1_HashToBucket(numOfBuckets, table1.start, scan_1_Index_R);
     // 对表S进行分组散列
-    scan_1_HashToBucket(numOfBuckets, S_start, scan_1_Index_S);
+    scan_1_HashToBucket(numOfBuckets, table2.start, scan_1_Index_S);
 
     /******************* 二趟扫描 *******************/
-    table_t resTable(joinResultStart, 2 * sizeOfRow);
+    table_t resTable(joinResultStart);
+    resTable.rowSize = 2 * sizeOfRow;
     scan_2_HashJoin(numOfBuckets, scan_1_Index_R, scan_1_Index_S, resTable);
+    for (int i = 0; i < numOfBuckets; ++i) {
+        DropFiles(scan_1_Index_R[i]);
+        DropFiles(scan_1_Index_S[i]);
+    }
     return resTable;
 }
 

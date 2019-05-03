@@ -17,7 +17,7 @@ const addr_t projStart = 2000;  // 投影结果的其实存放地址
  * @param projTable 待投影表的信息
  * @param resTable 投影结果表的信息
  */
-void project(table_t projTable, table_t resTable) {
+void project(table_t projTable, table_t &resTable) {
     block_t blk, resBlk;
     row_t t_read, t_write;
     addr_t curAddr = 0;
@@ -43,7 +43,9 @@ void project(table_t projTable, table_t resTable) {
         resBlk.writeRow(t_write);
         resTable.size += 1;
     }
-    curAddr = resBlk.writeLastBlock();
+    addr_t endAddr = resBlk.writeLastBlock();
+    if (endAddr != END_OF_FILE)
+        curAddr = endAddr;
     resTable.end = curAddr;
 }
 

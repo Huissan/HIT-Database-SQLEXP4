@@ -36,7 +36,6 @@ void error(char *err) {
  */
 int hashRowsByA(row_t R, int numOfBuckets) { return R.A % numOfBuckets; }
 
-
 /**
  * @brief argminµÄÊµÏÖ
  * 
