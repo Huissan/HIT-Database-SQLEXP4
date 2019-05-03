@@ -329,3 +329,26 @@ int read_N_Rows_From_M_Block(block_t *readBlk, row_t *R, int N, int M) {
     }
     return totalRead;
 }
+
+
+/**
+ * @brief 删除一个文件下的所有块
+ * 
+ * @param fileStartAddr 文件的起始地址块
+ */
+void DropFiles(const addr_t fileStartAddr) {
+    addr_t curAddr, next = fileStartAddr;
+    if (next == END_OF_FILE) {
+        printf("错误：删除文件为空，起始地址为%u的文件无法删除！\n", fileStartAddr);
+        system("pause");
+        exit(FAIL);
+    } else {
+        block_t delBlk;
+        do {
+            delBlk.loadFromDisk(next);
+            curAddr = next;
+            next = delBlk.readNextAddr();
+            dropBlockOnDisk(curAddr);
+        } while (next != END_OF_FILE);
+    }
+}
