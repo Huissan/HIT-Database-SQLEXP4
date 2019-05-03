@@ -180,12 +180,112 @@ void scan_3_SortedJoin(table_t table1, table_t table2, table_t &resTable) {
  * @return table_t 连接结果存放区域的最后一块的地址
  */
 table_t SORT_MERGE_JOIN(table_t table1, table_t table2) {
-    table_t resTable(joinResultStart);
+    table_t bigTable, smallTable, resTable(joinResultStart);
     resTable.rowSize = 2 * sizeOfRow;
-    useCluster(table1);
-    useCluster(table2);
-    addr_t indexAddr = useIndex(table1);
+    // 决定大小表
+    if (table1.size > table2.size) {
+        bigTable = table1;
+        smallTable = table2;
+    } else {
+        bigTable = table2;
+        smallTable = table1;
+    }
+    // 先对两表都做一遍聚簇
+    useCluster(bigTable);
+    addr_t smallTableAddr = useCluster(smallTable);
+    // 对大表做索引
+    addr_t indexAddr = useIndex(bigTable);
+    loadIndex(indexAddr);
+    BPTR.printData();
 
+    block_t blk1, blk2, resBlk;
+    resBlk.writeInit(resTable.start, numOfRowInBlk - 1);
+    blk1.loadFromDisk(smallTableAddr);
+
+    addr_t curAddr = 0, loadAddr;
+    row_t t1[numOfRowInBlk], t2[numOfRowInBlk], t2_copy[numOfRowInBlk];
+    int readRows_1, readRows_2, readRows_2_copy;
+    int prior_1 = MAX_ATTR_VAL;
+    bool earlyDie = false;
+    cursor_t cursor_2;
+    while(1) {
+        readRows_1 = read_N_Rows_From_1_Block(blk1, t1, numOfRowInBlk);
+        printRows(t1, readRows_1);
+        for (int k = 0; k < readRows_1; ++k) {
+            bool isSametoPrior = (t1[k].A == prior_1);
+            if (!isSametoPrior) {
+                // 与上一条记录的A值不同时才加载，避免重复加载带来的IO开销
+                vector<addr_t> addrList = BPTR.select(t1[k].A, EQ);
+                if (addrList.empty()) {
+                    // 没有匹配的值，直接跳过该条记录的后续匹配工作
+                    continue;
+                }
+                loadAddr = addrList[0];
+                blk2.loadFromDisk(loadAddr);
+                earlyDie = false;   // 加载了不同的索引必然没有早死现象
+            }
+            prior_1 = t1[k].A;
+            if (earlyDie) {
+                // 在匹配过程中出现了早死的情况
+                // 需要重新从该记录的第一条索引指向的磁盘块开始加载
+                blk2.loadFromDisk(loadAddr);
+            }
+            int loadBlocks = 0;
+            while(1) {
+                // 在索引加载块中检索连接值
+                readRows_2 = read_N_Rows_From_1_Block(blk2, t2, numOfRowInBlk);
+                loadBlocks += 1;
+                bool joinFinish = (readRows_2 < numOfRowInBlk);
+                cursor_2 = 0;
+                if (loadBlocks > 1 && t2[0].join_A(t1[k])) {
+                    // 早死现象捕获：当加载次数超过1次时，若新加载块的第一条记录驱动表当前的记录(t1[k])可以连接
+                    // 说明上一块不完全包含所有可以连接的记录，即早死
+                    // 这也说明了早死的检测时序在加载之后，这点请务必注意！
+                    earlyDie = true;
+                }
+                if (earlyDie || (isSametoPrior == false && loadBlocks == 1)) {
+                    readRows_2_copy = readRows_2;
+                    for (int i = 0; i < readRows_2_copy; ++i)
+                        t2_copy[i] = t2[i];
+                    // 这里排除了一种不需要加载下一块（不改变上一次的读取副本t2_copy）的特殊情况：
+                    // 小表(驱动表)在一块内有多条相同A值的记录，同时大表(被驱动表，索引表)中没有早死现象
+                    // printRows(t2_copy, readRows_2_copy);
+                }
+                row_t *cmpRow = (loadBlocks == 1) ? t2_copy : t2;
+                cursor_t cmpCursor = (loadBlocks == 1) ? readRows_2_copy : readRows_2;
+                // 移动索引块中的指针到第一个匹配上连接值的位置
+                while(cmpRow[cursor_2].A != t1[k].A && cursor_2 < cmpCursor)
+                    cursor_2 += 1;
+                if (cursor_2 == cmpCursor) {
+                    if (joinFinish == false)
+                        blk2.freeBlock();
+                    // 边界条件，这一块中没有符合连接条件的记录
+                    cursor_2 = readRows_2_copy; // 跳过连接操作
+                    joinFinish = true;
+                }
+                for (; cursor_2 < readRows_2_copy; ++cursor_2) {
+                    if (!t2_copy[cursor_2].join_A(t1[k])) {
+                        if (joinFinish == false)
+                            blk2.freeBlock();
+                        joinFinish = true;
+                        break;
+                    }
+                    curAddr = resBlk.writeRow(t1[k]);
+                    curAddr = resBlk.writeRow(t2_copy[cursor_2]);
+                    resTable.size += 1;
+                }
+                if (joinFinish)
+                    break;
+            }
+        }
+        if (readRows_1 < numOfRowInBlk) {
+            addr_t endAddr = resBlk.writeLastBlock();
+            if (endAddr != END_OF_FILE)
+                curAddr = endAddr;
+            resTable.end = curAddr;
+            break;
+        }
+    }
     return resTable;
 }
 
@@ -276,8 +376,8 @@ table_t HASH_JOIN() {
 int main() {
     bufferInit();
     // table_t res = NEST_LOOP_JOIN(table_R, table_S);
-    // table_t res = SORT_MERGE_JOIN(table_R, table_S);
-    table_t res = HASH_JOIN();
+    table_t res = SORT_MERGE_JOIN(table_R, table_S);
+    // table_t res = HASH_JOIN();
     if (res.size == 0) {
         system("pause");
         return FAIL;
