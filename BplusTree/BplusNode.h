@@ -60,7 +60,7 @@ protected:
  */
 int BplusNode::getKeyIndex(key_t key) const {
 	int left = 0;
-    int right = getKeyNum() - 1;
+    int right = getKeyNum();
     int current;
 	do {
         current = (left + right) / 2;
@@ -69,7 +69,7 @@ int BplusNode::getKeyIndex(key_t key) const {
             left = current + 1;
         else
 			right = current;
-	} while (left <= right);
+	} while (left < right);
 	return left;
 }
 
