@@ -2,26 +2,26 @@
 
 
 /**
- * 投影操作：投影R.A
+ * @brief 投影操作
+ * 投影R表中的非主码A属性
  */
 
 const addr_t projStart = 2000;  // 投影结果的其实存放地址
 
+
 /**
- * 投影
+ * @brief 投影
  * 从读取的表中抽取每一条记录的A属性写入结果
  * 
- * readStartAddr: 待投影表的起始地址
- * resStartAddr: 投影结果存放的起始地址
- * 
- * return: 投影结果存放区域的最后一块的地址
+ * @param projTable 待投影表的信息
+ * @param resTable 投影结果表的信息
  */
-addr_t project(addr_t readStartAddr, addr_t resStartAddr) {
+void project(table_t projTable, table_t resTable) {
     block_t blk, resBlk;
     row_t t_read, t_write;
     addr_t curAddr = 0;
-    blk.loadFromDisk(readStartAddr);
-    resBlk.writeInit(resStartAddr);
+    blk.loadFromDisk(projTable.start);
+    resBlk.writeInit(resTable.start);
     bool isLastRow = false;
     while(1) {
         t_read = blk.getNewRow();
@@ -39,19 +39,21 @@ addr_t project(addr_t readStartAddr, addr_t resStartAddr) {
         } else {
             t_write.B = t_read.A;
         }
-        curAddr = resBlk.writeRow(t_write);
+        resBlk.writeRow(t_write);
+        resTable.size += 1;
     }
-    return curAddr;
+    curAddr = resBlk.writeLastBlock();
+    resTable.end = curAddr;
 }
 
 
 /**************************** main ****************************/
 // int main() {
 //     bufferInit();
-//     addr_t resEndAddr = project(R_start, projStart);
+//     table_t projRes(projStart);
+//     project(table_R, projStart);
 //     showResult(projStart, sizeOfRow / 2);
-//     if (resEndAddr)
-//         printf("\n注：结果写入磁盘块：2000-%d\n", resEndAddr);
+//     printf("\n注：结果写入磁盘块：%d-%d\n", projRes.start, projRes.end);
 //     printf("本次共发生%ld次I/O\n", buff.numIO);
 //     system("pause");
 //     return OK;
