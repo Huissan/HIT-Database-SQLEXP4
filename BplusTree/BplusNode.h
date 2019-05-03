@@ -10,7 +10,7 @@ enum NODE_TYPE {INTERNAL, LEAF};				// 结点类型：内结点、叶子结点
 enum SIBLING_DIRECTION {LEFT, RIGHT};			// 兄弟结点方向：左兄弟结点、右兄弟结点
 typedef float key_t;                         	// 键类型
 typedef addr_t tree_data_t;                    	// 值类型
-extern const int ORDER = 7;                     // B+树的阶（非根内结点的最小子树个数）
+extern const int ORDER = 8;                     // B+树的阶（非根内结点的最小子树个数）
 extern const int MINNUM_KEY = ORDER - 1;		// 最小键值个数
 extern const int MAXNUM_KEY = 2 * ORDER - 1;	// 最大键值个数
 extern const int MINNUM_CHILD = MINNUM_KEY + 1; // 最小子树个数
@@ -62,14 +62,14 @@ int BplusNode::getKeyIndex(key_t key) const {
 	int left = 0;
     int right = getKeyNum() - 1;
     int current;
-	while(left != right) {
+	do {
         current = (left + right) / 2;
         key_t currentKey = getKeyValue(current);
 		if (key > currentKey)
             left = current + 1;
         else
 			right = current;
-	}
+	} while (left <= right);
 	return left;
 }
 
