@@ -11,7 +11,7 @@ C++版本
 * 工具
     > Block/* - 基于其中的extmem.h封装的迭代器以及相关的API  
     > BplusTree/* - B+树模板
-    > utils.cpp - 提供一些诸如argmin、内排序等基本的轮子和基于Block类的操作
+    > utils.cpp - 提供一些诸如argmin、内排序等基本的轮子和基于Block类的操作  
     > index.cpp - 索引相关API的实现  
     > distinct.cpp - 去重功能的实现  
 * 任务要求功能
