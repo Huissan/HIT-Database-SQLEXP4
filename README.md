@@ -10,7 +10,7 @@ C++版本
     > data/* - 包含本次实验用到的起始文件，用于模拟磁盘环境
 * 工具
     > Block/* - 基于其中的extmem.h封装的迭代器以及相关的API  
-    > BplusTree/* - B+树模板
+    > BplusTree/* - B+树模板  
     > utils.cpp - 提供一些诸如argmin、内排序等基本的轮子和基于Block类的操作  
     > index.cpp - 索引相关API的实现  
     > distinct.cpp - 去重功能的实现  
