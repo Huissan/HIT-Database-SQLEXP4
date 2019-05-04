@@ -24,7 +24,7 @@ std::vector<row_t> overlaps;
 void generateANDwrite(table_t table, int range[][2]) {
     Block blk;
     blk.writeInit(table.start);
-    row_t r;
+    row_t r, emptyRow;
     addr_t curAddr = 0;
     for (int i = 0, count = 0; i < table.size;) {
         // 生成7条记录，存入blk中
@@ -52,7 +52,6 @@ void generateANDwrite(table_t table, int range[][2]) {
 /**************************** main ****************************/
 int main() {
     bufferInit();
-    overlaps.resize(maxOverlaps);
     // 生成重复记录集
     row_t t;
     srand(time(NULL));
