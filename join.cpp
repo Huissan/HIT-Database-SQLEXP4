@@ -84,6 +84,9 @@ table_t NEST_LOOP_JOIN(table_t table1, table_t table2) {
             break;
         }
     }
+    // 处理空结果表
+    if (resTable.size == 0)
+        resTable.start = resTable.end = 0;
     return resTable;
 }
 
@@ -204,6 +207,9 @@ table_t SORT_MERGE_JOIN(table_t table1, table_t table2) {
             break;
         }
     }
+    // 处理空结果表
+    if (resTable.size == 0)
+        resTable.start = resTable.end = 0;
     return resTable;
 }
 
@@ -263,9 +269,12 @@ void scan_2_HashJoin(int numOfBuckets, addr_t scan_1_index_R[], addr_t scan_1_in
             addr_t endAddr = resBlk.writeLastBlock();
             if (endAddr != END_OF_FILE)
                 curAddr = endAddr;
+            resTable.end = curAddr;
         }
     }
-    resTable.end = curAddr;
+    // 处理空结果表
+    if (resTable.size == 0)
+        resTable.start = resTable.end = 0;
 }
 
 
@@ -292,6 +301,9 @@ table_t HASH_JOIN(table_t table1, table_t table2) {
         DropFiles(scan_1_Index_R[i]);
         DropFiles(scan_1_Index_S[i]);
     }
+    // 处理空结果表
+    if (resTable.size == 0)
+        resTable.start = resTable.end = 0;
     return resTable;
 }
 
