@@ -79,6 +79,9 @@ void linearQuery(const table_t &table, table_t &resTable, int val, bool (*cond)(
             break;
         }
     }
+    // 处理空结果表
+    if (resTable.size == 0)
+        resTable.start = resTable.end = 0;
 }
 
 
@@ -133,7 +136,8 @@ void binaryQuery(const table_t &table, table_t &resTable, int val, int (*cmp)(ro
             break;
     }
     if (pRes == 0) {
-        printf("没有检索到符合条件的记录!\n");
+        resBlk.freeBlock();                 // 需要手动释放结果缓冲区
+        resTable.start = resTable.end = 0;  // 处理空结果表
         return;
     }
     insertSort<row_t>(res, pRes);

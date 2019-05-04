@@ -62,6 +62,9 @@ void tablesIntersect(table_t table1, table_t table2, table_t &resTable) {
             break;
         }
     }
+    // 处理空结果表
+    if (resTable.size == 0)
+        resTable.start = resTable.end = 0;
 }
 
 
@@ -125,6 +128,9 @@ void tablesDiff(table_t diffedTable, table_t diffTable, table_t &resTable) {
             break;
         }
     }
+    // 处理空结果表
+    if (resTable.size == 0)
+        resTable.start = resTable.end = 0;
 }
 
 

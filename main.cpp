@@ -7,6 +7,11 @@
 #include "setOperations.cpp"
 
 
+/**
+ * @brief 输出操作结果表在本次读写中的相关信息
+ * 
+ * @param table 操作结果表的信息
+ */
 void print_IO_Info(table_t table) {
     if (table.start)
         printf("\n注：结果写入磁盘块：%d-%d\n", table.start, table.end);
@@ -15,8 +20,13 @@ void print_IO_Info(table_t table) {
 }
 
 
+/**
+ * @brief 删除res表指向的文件
+ * 
+ * @param res 待删除的表的信息
+ */
 void dropResultTable(table_t res) {
-    if (res.size)
+    if (res.start && res.size)
         DropFiles(res.start);
     res.size = 0;
 }
@@ -72,6 +82,11 @@ int main() {
 
                     if (select == 0)
                         break;
+                    else if (select < 0 || select > 3){
+                        printf("不可以做出0-3以外的选择哦~\n");
+                        system("pause");
+                        continue;
+                    }
 
                     system("cls");
                     if (select == 1)
@@ -98,6 +113,7 @@ int main() {
                     cin >> val;
 
                     dropResultTable(condQueryTable);
+                    condQueryTable.start = condQueryStart;
                     clear_Buff_IO_Count();
                     if (select == 1) {
                         linearQuery(table, condQueryTable, val, EQ_cond);
@@ -110,10 +126,6 @@ int main() {
                     } else if (select == 3) {
                         searchByIndex_and_Show(table, condQueryTable, val);
                         system("pause");
-                    } else {
-                        printf("不可以做出0-3以外的选择哦~\n");
-                        system("pause");
-                        continue;
                     }
                 };
                 break;
@@ -161,6 +173,7 @@ int main() {
                         break;
 
                     dropResultTable(joinTable);
+                    joinTable.start = joinResultStart;
                     if (select == 1) {
                         printf("查看嵌套循环连接(NEST-LOOP JOIN)的结果：\n");
                         joinTable = NEST_LOOP_JOIN(table_R, table_S);
@@ -198,6 +211,7 @@ int main() {
                         break;
 
                     dropResultTable(setOperationTable);
+                    setOperationTable.start = setOperationResultStart;
                     if (select == 1) {
                         printf("查看R∪S的结果：\n");
                         tablesUnion(table_R, table_S, setOperationTable);
