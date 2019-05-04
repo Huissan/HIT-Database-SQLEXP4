@@ -170,6 +170,10 @@ void indexQuery(const table_t &table, table_t &resTable, int val) {
     else
         printf("索引已被加载到内存中，无需加载！\n");
     vector<tree_data_t> data = BPTR.select(val, EQ);
+    if (data.begin() == data.end()) {
+        resTable.start = resTable.end = resTable.size = 0;
+        return;
+    }
     addr_t loadAddr = data[0];
 
     // 从索引指向的聚簇存放地址中查找结果
@@ -186,6 +190,7 @@ void indexQuery(const table_t &table, table_t &resTable, int val) {
         if (readRows > 0) {
             if (R[cursor].A > val)  {
                 // 找到第一个大于索引字段值时结束检索
+                readBlk.freeBlock();
                 break;
             }
             while(R[cursor].A < val)

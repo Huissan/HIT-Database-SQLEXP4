@@ -8,7 +8,8 @@
 
 
 void print_IO_Info(table_t table) {
-    printf("\n注：结果写入磁盘块：%d-%d\n", table.start, table.end);
+    if (table.start)
+        printf("\n注：结果写入磁盘块：%d-%d\n", table.start, table.end);
     printf("本次共发生%ld次I/O\n\n", buff.numIO);
     system("pause");
 }
@@ -28,6 +29,7 @@ int main() {
     int select;
     table_t condQueryTable(condQueryStart);
     table_t projectTable(projStart);
+    projectTable.rowSize = sizeOfRow / 2;
     table_t joinTable(joinResultStart);
     joinTable.rowSize = 2 * sizeOfRow;
     table_t setOperationTable(setOperationResultStart);
@@ -71,30 +73,39 @@ int main() {
                     if (select == 0)
                         break;
 
+                    system("cls");
+                    if (select == 1)
+                        printf("1. 线性检索\n");
+                    else if (select == 2)
+                        printf("2. 二分检索\n");
+                    else if (select == 3)
+                        printf("3. 索引检索\n");
+                    
                     printf("\n您想看R表还是S表？(输入R或S)\n");
                     cin >> tableName;
                     if (tableName == 'R') {
                         table = table_R;
-                        val = 40;
+                        // val = 40;
                     } else if (tableName == 'S') {
                         table = table_S;
-                        val = 60;
+                        // val = 60;
                     } else {
                         printf("不可以输入R或S以外的任何东西噢~\n");
                         system("pause");
                         continue;
                     }
+                    printf("请输入查找值：");
+                    cin >> val;
 
-                    system("cls");
                     dropResultTable(condQueryTable);
                     clear_Buff_IO_Count();
                     if (select == 1) {
                         linearQuery(table, condQueryTable, val, EQ_cond);
-                        showResult(condQueryTable.start);
+                        showResult(condQueryTable);
                         print_IO_Info(condQueryTable);
                     } else if (select == 2) {
                         binaryQuery(table, condQueryTable, val, cmp);
-                        showResult(condQueryTable.start);
+                        showResult(condQueryTable);
                         print_IO_Info(condQueryTable);
                     } else if (select == 3) {
                         searchByIndex_and_Show(table, condQueryTable, val);
@@ -117,12 +128,12 @@ int main() {
                     if (tableName == 'R') {
                         printf("将为您投影R的第一个属性：\n");
                         project(table_R, projectTable);
-                        showResult(projectTable.start, sizeOfRow / 2);
+                        showResult(projectTable);
                         print_IO_Info(projectTable);
                     } else if (tableName == 'S') {
                         printf("将为您投影S的第一个属性：\n");
                         project(table_S, projectTable);
-                        showResult(projectTable.start, sizeOfRow / 2);
+                        showResult(projectTable);
                         print_IO_Info(projectTable);
                     } else {
                         printf("不可以有R表或S表以外的选择哦~\n");
@@ -164,7 +175,7 @@ int main() {
                         system("pause");
                         continue;
                     }
-                    showResult(joinTable.start, joinTable.rowSize);
+                    showResult(joinTable);
                     print_IO_Info(joinTable);
                 }
                 break;
@@ -215,7 +226,7 @@ int main() {
                         system("pause");
                         continue;
                     }
-                    showResult(setOperationTable.start);
+                    showResult(setOperationTable);
                     print_IO_Info(setOperationTable);
                 }
                 break;

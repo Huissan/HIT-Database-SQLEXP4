@@ -96,55 +96,57 @@ void printRows(row_t t[], int size, int matchVal = -1) {
 /**
  * @brief 输出结果磁盘块中存放的内容
  * 
- * @param resStartAddr 结果磁盘块的起始地址
- * @param newSizeOfRow 记录的长度，用于控制换行符的位置
+ * @param resTable 结果表的信息
  */
-void showResult(addr_t resStartAddr, int newSizeOfRow = sizeOfRow) {
-    float timesToStandartRow = 1.0 * newSizeOfRow / sizeOfRow;
+void showResult(table_t resTable) {
+    float timesToStandartRow = 1.0 * resTable.rowSize / sizeOfRow;
     int numOfRows = floor(numOfRowInBlk / timesToStandartRow);
     int numOfStandardRows = timesToStandartRow * numOfRows;
     // 下面是一些输出结果中用到的参数
     bool rowStart, rowEnd, timesSmallerThanOne = (timesToStandartRow < 1);
     char delim = (timesSmallerThanOne) ? '\n' : '\t';
     int base = (timesSmallerThanOne) ? 1 : (int)timesToStandartRow;
-
-    block_t readBlk;
-    readBlk.loadFromDisk(resStartAddr, sizeOfRow * numOfStandardRows);
-    row_t t[numOfStandardRows];
-    int readRows, count = 0;
-    printf("\n------------ 输出结果 ------------\n");
     int curRows = 0;
-    while(1) {
-        readRows = read_N_Rows_From_1_Block(readBlk, t, numOfStandardRows);
-        // 输出结果的IO次数不计入表操作的IO次数，所以要减去
-        // 这里还假设了结果是连续存储的，且除最后一块以外其他块都是写满的
-        buff.numIO -= ceil(1.0 * readRows / numOfRowInBlk);
-        count += readRows;
-        if (timesSmallerThanOne) {
-            rowStart = true;
-            rowEnd = true;
-        }
-        for (int i = 0; i < readRows; ++i, ++curRows) {
-            if (!timesSmallerThanOne) {
-                rowStart = ((curRows % (int)timesToStandartRow) == 0);
-                rowEnd = (((i + 1) % (int)timesToStandartRow) == 0);
+    if (resTable.start == 0) {
+        printf("\n------------ 输出结果 ------------\n");
+        printf("\n          查找结果不存在！\n\n");
+    } else {
+        block_t readBlk;
+        readBlk.loadFromDisk(resTable.start, sizeOfRow * numOfStandardRows);
+        row_t t[numOfStandardRows];
+        int readRows, count = 0;
+        printf("\n------------ 输出结果 ------------\n");
+        while(1) {
+            readRows = read_N_Rows_From_1_Block(readBlk, t, numOfStandardRows);
+            // 输出结果的IO次数不计入表操作的IO次数，所以要减去
+            // 这里还假设了结果是连续存储的，且除最后一块以外其他块都是写满的
+            buff.numIO -= ceil(1.0 * readRows / numOfRowInBlk);
+            count += readRows;
+            if (timesSmallerThanOne) {
+                rowStart = true;
+                rowEnd = true;
             }
-            if (rowStart)
-                printf("%d\t", curRows / base + 1);
-            printf("%d%c", t[i].A, delim);
-            if (timesSmallerThanOne)
-                printf("%d\t", ++curRows / base + 1);
-            printf("%d%c", t[i].B, delim);
-            if (rowEnd && !timesSmallerThanOne)
-                printf("\n");
-        }
-        if (readRows < numOfStandardRows) {
-            if (readRows % numOfRowInBlk != 0)
-                readBlk.freeBlock();
-            break;
+            for (int i = 0; i < readRows; ++i, ++curRows) {
+                if (!timesSmallerThanOne) {
+                    rowStart = ((curRows % (int)timesToStandartRow) == 0);
+                    rowEnd = (((i + 1) % (int)timesToStandartRow) == 0);
+                }
+                if (rowStart)
+                    printf("%d\t", curRows / base + 1);
+                printf("%d%c", t[i].A, delim);
+                if (timesSmallerThanOne)
+                    printf("%d\t", ++curRows / base + 1);
+                printf("%d%c", t[i].B, delim);
+                if (rowEnd && !timesSmallerThanOne)
+                    printf("\n");
+            }
+            if (readRows < numOfStandardRows) {
+                if (readRows % numOfRowInBlk != 0)
+                    readBlk.freeBlock();
+                break;
+            }
         }
     }
-
     printf("----------------------------------\n");
     printf(" 共%d行结果\n\n", curRows / base);
 }
