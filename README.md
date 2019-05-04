@@ -16,7 +16,8 @@ C++版本
     > distinct.cpp - 去重功能的实现  
 * 任务要求功能
     > condQuery.cpp - 条件检索，包含线性检索、二分检索和索引检索  
-    > project.cpp - 投影操作，基于属性A的投影  
+    > project.cpp - 投影操作，基于属性A的投影
+    
     > join.cpp - 连接操作，包含NEST-LOOP JOIN、SORT-MERGE JOIN和HASH JOIN  
     > setOperations.cpp 集合操作，包含并、交、差  
     > recordGenerator.cpp - 随机生成R表和S表的记录  
