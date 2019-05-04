@@ -18,7 +18,7 @@ const addr_t joinResultStart = 3000;    // 连接结果的起始存放地址
  * 
  * @param table1 第一个表的相关信息
  * @param table2 第二个表的相关信息
- * @return table_t 连接结果存放区域的信息表
+ * @return table_t 连接结果的存储信息表
  */
 table_t NEST_LOOP_JOIN(table_t table1, table_t table2) {
     table_t resTable(joinResultStart), bigTable, smallTable;
@@ -90,95 +90,11 @@ table_t NEST_LOOP_JOIN(table_t table1, table_t table2) {
 // -----------------------------------------------------------
 //                      Sort Merge Join                       
 // -----------------------------------------------------------
-/**
- * @brief 三趟扫描
- * 从磁盘中读取完全有序的两表到缓冲区上
- * 检查连接条件，并将可连接的记录写入结果存储块中
- * 在这里选用了R表读1块，S表读2块的缓冲区读写策略
- * 
- * @param R_addr 有序R表的存储起始地址
- * @param S_addr 有序S表的存储起始地址
- * @param resTable 连接结果的存储信息表
- */
-void scan_3_SortedJoin(table_t table1, table_t table2, table_t &resTable) {
-    table_t bigTable, smallTable;
-    // 决定大小表
-    if (table1.size > table2.size) {
-        bigTable = table1;
-        smallTable = table2;
-    } else {
-        bigTable = table2;
-        smallTable = table1;
-    }
-    int maxNumOfRows_1 = numOfRowInBlk;     // 一次从磁盘上读取1块小表
-    int maxNumOfRows_2 = 2 * numOfRowInBlk; // 一次从磁盘上读取2块大表
-    block_t blkSmall, blkBig, preLoadBlk, resBlk;
-    Row t_R, t_S[maxNumOfRows_2];
-    resBlk.writeInit(resTable.start, numOfRowInBlk - 1);
-    blkSmall.loadFromDisk(smallTable.start);
-    blkBig.loadFromDisk(bigTable.start);
-
-    int readRows_2 = maxNumOfRows_2;
-    int pt_S = readRows_2;     // 记录S表的最后一个可连接记录的检索位置
-    int matchMark = 0;          // 记录上一批连接操作的第一次匹配位置，以便剪枝
-    addr_t curAddr = resTable.start;
-    bool prior_match = false;
-    bool R_over = false, S_over = false;
-    while(1) {
-        // 循环检索连接条件
-        t_R = blkSmall.getNewRow();
-        R_over = (t_R.isFilled == false);
-        if (R_over || S_over) {
-            // 结束连接循环检索的条件：
-            // 1. R表读完了  或  2. S表读完了
-            if (!R_over)
-                blkSmall.freeBlock();
-            else if (!S_over)
-                blkBig.freeBlock();
-            else
-                ;
-            addr_t endAddr = resBlk.writeLastBlock();
-            if (endAddr != END_OF_FILE)
-                curAddr = endAddr;
-            resTable.end = curAddr;
-            break;
-        }
-        if (pt_S == readRows_2) {
-            // 检索完所有加载到缓冲区的的S表数据，需要加载下一批数据
-            pt_S = 0;       // 两个标记的复位
-            matchMark = 0;
-            readRows_2 = read_N_Rows_From_1_Block(blkBig, t_S, maxNumOfRows_2);
-            S_over = (readRows_2 < maxNumOfRows_2);
-        }
-        for (int i = matchMark; i < readRows_2; ++i) { 
-            // R表记录与S表读取的每一条记录进行比对&连接
-            if (t_R > t_S[i]) {
-                prior_match = false;
-                if (i == readRows_2 - 1) {
-                    // 目前为止没有能够连接上的，需要更新标记，以加载下一批数据
-                    pt_S = readRows_2;
-                }
-                continue;
-            } else if (t_R.join_A(t_S[i])) {
-                matchMark = prior_match ? matchMark : i;
-                prior_match = true;
-                curAddr = resBlk.writeRow(t_R);
-                curAddr = resBlk.writeRow(t_S[i]);
-                resTable.size += 1;
-                pt_S = i + 1;   // 更新最后一次连接的位置标记
-            } else {
-                prior_match = false;
-                break;
-            }
-        }
-    }
-}
-
 
 /**
  * @brief 采用多路归并排序的方法进行表的连接
  * 
- * @return table_t 连接结果存放区域的最后一块的地址
+ * @return table_t 连接结果的存储信息表
  */
 table_t SORT_MERGE_JOIN(table_t table1, table_t table2) {
     table_t bigTable, smallTable, resTable(joinResultStart);
@@ -197,7 +113,6 @@ table_t SORT_MERGE_JOIN(table_t table1, table_t table2) {
     // 对大表做索引
     addr_t indexAddr = useIndex(bigTable);
     loadIndex(indexAddr);
-    BPTR.printData();
 
     block_t blk1, blk2, resBlk;
     resBlk.writeInit(resTable.start, numOfRowInBlk - 1);
@@ -301,8 +216,9 @@ table_t SORT_MERGE_JOIN(table_t table1, table_t table2) {
  * 可连接的记录一定具有相同的散列值，因而只需遍历两表对应编号相同的桶中的所有记录即可
  * 
  * @param numOfBuckets 散列的桶的数量
- * @param scan_1_index_R 
- * @param scan_1_index_S 
+ * @param scan_1_index_R 第一个表每个散列桶的起始地址
+ * @param scan_1_index_S 第二个表每个散列桶的起始地址
+ * @param resTable 连接结果的存储信息表
  */
 void scan_2_HashJoin(int numOfBuckets, addr_t scan_1_index_R[], addr_t scan_1_index_S[], table_t &resTable) {
     addr_t curAddr = 0;
@@ -356,7 +272,7 @@ void scan_2_HashJoin(int numOfBuckets, addr_t scan_1_index_R[], addr_t scan_1_in
 /**
  * @brief 采用散列的方法进行表的连接
  * 
- * @return addr_t 连接结果存放区域的最后一块的地址
+ * @return table_t 连接结果的存储信息表
  */
 table_t HASH_JOIN(table_t table1, table_t table2) {
     /******************* 一趟扫描 *******************/
