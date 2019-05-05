@@ -197,6 +197,9 @@ void scan_1_HashToBucket(int numOfBuckets, addr_t startIndex, addr_t scan_1_inde
             break;
         }
     }
+    // 需要回收这两个对象指针指向的内存区域
+    delete[] readBlk;
+    delete[] bucketBlk;
 }
 
 
