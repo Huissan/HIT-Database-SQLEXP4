@@ -16,8 +16,8 @@ const addr_t joinResultStart = 3000;    // 连接结果的起始存放地址
 /**
  * @brief 采用嵌套循环的方法进行表的连接
  * 
- * @param table1 第一个表的相关信息
- * @param table2 第二个表的相关信息
+ * @param table1 待连接的第一个表的相关信息
+ * @param table2 待连接的第二个表的相关信息
  * @return table_t 连接结果的存储信息表
  */
 table_t NEST_LOOP_JOIN(table_t table1, table_t table2) {
@@ -97,6 +97,8 @@ table_t NEST_LOOP_JOIN(table_t table1, table_t table2) {
 /**
  * @brief 采用多路归并排序的方法进行表的连接
  * 
+ * @param table1 待连接的第一个表的相关信息
+ * @param table2 待连接的第二个表的相关信息
  * @return table_t 连接结果的存储信息表
  */
 table_t SORT_MERGE_JOIN(table_t table1, table_t table2) {
@@ -281,6 +283,8 @@ void scan_2_HashJoin(int numOfBuckets, addr_t scan_1_index_R[], addr_t scan_1_in
 /**
  * @brief 采用散列的方法进行表的连接
  * 
+ * @param table1 待连接的第一个表的相关信息
+ * @param table2 待连接的第二个表的相关信息
  * @return table_t 连接结果的存储信息表
  */
 table_t HASH_JOIN(table_t table1, table_t table2) {
