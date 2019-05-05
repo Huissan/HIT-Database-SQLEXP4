@@ -136,8 +136,6 @@ table_t SORT_MERGE_JOIN(table_t table1, table_t table2) {
             bool isSametoPrior = (t1[k].A == prior_1);
             if (!isSametoPrior) {
                 // 与上一条记录的A值不同时才加载，避免重复加载带来的IO开销
-                if (t1[k].A == 21)
-                    printf("");
                 vector<addr_t> addrList = BPTR.select(t1[k].A, EQ);
                 if (addrList.empty()) {
                     // 没有匹配的值，直接跳过该条记录的后续匹配工作
