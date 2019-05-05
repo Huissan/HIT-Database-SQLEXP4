@@ -32,9 +32,9 @@ table_t NEST_LOOP_JOIN(table_t table1, table_t table2) {
         smallTable = table1;
     }
     addr_t bigTableAddr = bigTable.start, smallTableAddr = smallTable.start;
-    int numOfSeriesBlock = 6;     // 大表使用的缓冲区块数
-    int numOfRows_1 = numOfRowInBlk * numOfSeriesBlock; // 大表一次读入的记录数量
-    int numOfRows_2 = numOfRowInBlk;                    // 小表一次读入的记录数量
+    int numOfSeriesBlock = 6;                           // 小表使用的缓冲区块数
+    int numOfRows_1 = numOfRowInBlk * numOfSeriesBlock; // 小表一次读入的记录数量
+    int numOfRows_2 = numOfRowInBlk;                    // 大表一次读入的记录数量
     int numOfRows_res = numOfRowInBlk - 1;              // 结果表中的标准记录数量
     addr_t curAddr = 0;
     
@@ -54,12 +54,12 @@ table_t NEST_LOOP_JOIN(table_t table1, table_t table2) {
     row_t tSeries[numOfRows_1], tSingle[numOfRows_2];
     int readRows_1, readRows_2;
     while(1) {
-        // 小表循环嵌入大表循环，可以减少IO次数
-        // 外层循环：大表一次从磁盘上读取numOfSeriesBlock块的内容
+        // 大表循环嵌入小表循环，可以减少IO次数
+        // 外层循环：小表一次从磁盘上读取numOfSeriesBlock块的内容
         readRows_1 = read_N_Rows_From_M_Block(seriesBlk, tSeries, numOfRows_1, numOfSeriesBlock);
         singleBlk.loadFromDisk(bigTableAddr);
         while(1) {
-            // 内层循环：小表一次从磁盘上读取1块的内容
+            // 内层循环：大表一次从磁盘上读取1块的内容
             readRows_2 = read_N_Rows_From_1_Block(singleBlk, tSingle, numOfRows_2);
             for (int i = 0; i < readRows_1; ++i) {
                 for (int j = 0; j < readRows_2; ++j) {
@@ -71,12 +71,12 @@ table_t NEST_LOOP_JOIN(table_t table1, table_t table2) {
                 }
             }
             if (readRows_2 < numOfRows_2) {
-                // S读完了
+                // 大表读完了
                 break;
             }
         }
         if (readRows_1 < numOfRows_1) {
-            // R读完了
+            // 小表读完了
             addr_t endAddr = resBlk.writeLastBlock();
             if (endAddr != END_OF_FILE)
                 curAddr = endAddr;
