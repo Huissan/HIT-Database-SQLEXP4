@@ -42,9 +42,9 @@ table_t NEST_LOOP_JOIN(table_t table1, table_t table2) {
     block_t seriesBlk[numOfSeriesBlock], singleBlk, resBlk;
     resBlk.writeInit(joinResultStart, numOfRows_res);
     for (int i = 0; i < numOfSeriesBlock; ++i) {
-        seriesBlk[i].loadFromDisk(bigTableAddr);
-        bigTableAddr = seriesBlk[i].readNextAddr();
-        if (bigTableAddr == END_OF_FILE) {
+        seriesBlk[i].loadFromDisk(smallTableAddr);
+        smallTableAddr = seriesBlk[i].readNextAddr();
+        if (smallTableAddr == END_OF_FILE) {
             numOfSeriesBlock = i + 1;
             numOfRows_1 = numOfRowInBlk * numOfSeriesBlock;
             break;
@@ -57,7 +57,7 @@ table_t NEST_LOOP_JOIN(table_t table1, table_t table2) {
         // 小表循环嵌入大表循环，可以减少IO次数
         // 外层循环：大表一次从磁盘上读取numOfSeriesBlock块的内容
         readRows_1 = read_N_Rows_From_M_Block(seriesBlk, tSeries, numOfRows_1, numOfSeriesBlock);
-        singleBlk.loadFromDisk(smallTableAddr);
+        singleBlk.loadFromDisk(bigTableAddr);
         while(1) {
             // 内层循环：小表一次从磁盘上读取1块的内容
             readRows_2 = read_N_Rows_From_1_Block(singleBlk, tSingle, numOfRows_2);
