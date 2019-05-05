@@ -23,38 +23,38 @@ void tablesIntersect(table_t table1, table_t table2, table_t &resTable) {
         bigTable = table2;
         smallTable = table1;
     }
-    int numOfR = 6;
-    int numOfRows_R = numOfRowInBlk * numOfR, numOfRows_S = numOfRowInBlk;
-    addr_t readAddr_1 = bigTable.start, readAddr_2 = smallTable.start;
+    int numOfSeriesBlk = 6;
+    int numOfRows_1 = numOfRowInBlk * numOfSeriesBlk, numOfRows_2 = numOfRowInBlk;
+    addr_t readAddr_1 = smallTable.start, readAddr_2 = bigTable.start;
     addr_t curAddr = 0, resAddr = resTable.start;
     
-    block_t seriesBlk[numOfR], singleBlk, resBlk;
-    for (int i = 0; i < numOfR; ++i)
+    block_t seriesBlk[numOfSeriesBlk], singleBlk, resBlk;
+    for (int i = 0; i < numOfSeriesBlk; ++i)
         seriesBlk[i].loadFromDisk(readAddr_1++);
     resBlk.writeInit(resAddr);
-    row_t t_R[numOfRows_R], t_S[numOfRows_S];
+    row_t t1[numOfRows_1], t2[numOfRows_2];
 
     int readRows_1, readRows_2;
     while(1) {
-        // 每次从R中读入6块
-        readRows_1 = read_N_Rows_From_M_Block(seriesBlk, t_R, numOfRows_R, numOfR);
+        // 每次从小表中读入6块
+        readRows_1 = read_N_Rows_From_M_Block(seriesBlk, t1, numOfRows_1, numOfSeriesBlk);
         // printRows(t, readRows, val);
         singleBlk.loadFromDisk(readAddr_2);
         while(1) {
-            // 每次从S中读入1块进行比较
-            readRows_2 = read_N_Rows_From_1_Block(singleBlk, t_S, numOfRows_S);
+            // 每次从大表中读入1块进行比较
+            readRows_2 = read_N_Rows_From_1_Block(singleBlk, t2, numOfRows_2);
             for (int i = 0; i < readRows_1; ++i) {
                 for (int j = 0; j < readRows_2; ++j) {
-                    if (t_R[i] == t_S[j]) {
-                        curAddr = resBlk.writeRow(t_R[i]);
+                    if (t1[i] == t2[j]) {
+                        curAddr = resBlk.writeRow(t1[i]);
                         resTable.size += 1;
                     }
                 }
             }
-            if (readRows_2 < numOfRows_S)
+            if (readRows_2 < numOfRows_2)
                 break;
         }
-        if (readRows_1 < numOfRows_R) {
+        if (readRows_1 < numOfRows_1) {
             addr_t endAddr = resBlk.writeLastBlock();
             if (endAddr != END_OF_FILE)
                 curAddr = endAddr;
