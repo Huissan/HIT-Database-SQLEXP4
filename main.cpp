@@ -114,6 +114,7 @@ int main() {
 
                     dropResultTable(condQueryTable);
                     condQueryTable.start = condQueryStart;
+                    condQueryTable.size = 0;
                     clear_Buff_IO_Count();
                     if (select == 1) {
                         linearQuery(table, condQueryTable, val, EQ_cond);
@@ -174,6 +175,7 @@ int main() {
 
                     dropResultTable(joinTable);
                     joinTable.start = joinResultStart;
+                    joinTable.size = 0;
                     if (select == 1) {
                         printf("查看嵌套循环连接(NEST-LOOP JOIN)的结果：\n");
                         joinTable = NEST_LOOP_JOIN(table_R, table_S);
@@ -212,6 +214,7 @@ int main() {
 
                     dropResultTable(setOperationTable);
                     setOperationTable.start = setOperationResultStart;
+                    setOperationTable.size = 0;
                     if (select == 1) {
                         printf("查看R∪S的结果：\n");
                         tablesUnion(table_R, table_S, setOperationTable);
